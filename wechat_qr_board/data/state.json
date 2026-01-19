@@ -1,0 +1,317 @@
+{
+  "updated_at": 1768809865.4785528,
+  "seats": {
+    "20260213-001 지정석-301-1- -301구역 18열-9": {
+      "seat_key": "20260213-001 지정석-301-1- -301구역 18열-9",
+      "seat_label": "20260213-001 지정석-301-1- -301구역 18열-9",
+      "account_info": "25018276 | micron_gymnast.0k@icloud.com:Qsc951300",
+      "pending_count": 0,
+      "scanned_count": 1,
+      "status": "scanned",
+      "current": null
+    },
+    "20260213-001 지정석-406-1- -406구역 3열-15": {
+      "seat_key": "20260213-001 지정석-406-1- -406구역 3열-15",
+      "seat_label": "20260213-001 지정석-406-1- -406구역 3열-15",
+      "account_info": "25018276 | redhead-stat-0b@icloud.com:Qsc951300",
+      "pending_count": 1,
+      "scanned_count": 0,
+      "status": "pending",
+      "current": {
+        "qr_url": "https://secureapi.ext.eximbay.com/servlet/QRCodeGenerator?qrtxt=weixin://wxpay/bizpayurl?pr=4xjSefHz1&width=265&height=265",
+        "message_link": "https://discord.com/channels/1374796952688136262/1374797975452127332/1462689052968091688",
+        "captured_at": 1768802646.6711717,
+        "expires_at": 1768803061.6711717
+      }
+    },
+    "20260213-001 지정석-416-1- -B6구역 4열-18": {
+      "seat_key": "20260213-001 지정석-416-1- -B6구역 4열-18",
+      "seat_label": "20260213-001 지정석-416-1- -B6구역 4열-18",
+      "account_info": "25018276 | romance_page.0z@icloud.com:Qsc951300",
+      "pending_count": 1,
+      "scanned_count": 0,
+      "status": "pending",
+      "current": {
+        "qr_url": "https://secureapi.ext.eximbay.com/servlet/QRCodeGenerator?qrtxt=weixin://wxpay/bizpayurl?pr=cQr7eh3z3&width=265&height=265",
+        "message_link": "https://discord.com/channels/1374796952688136262/1374797975452127332/1462689055933333588",
+        "captured_at": 1768802647.4761462,
+        "expires_at": 1768803062.4761462
+      }
+    },
+    "20260213-001 지정석-401-1- -401구역 7열-7": {
+      "seat_key": "20260213-001 지정석-401-1- -401구역 7열-7",
+      "seat_label": "20260213-001 지정석-401-1- -401구역 7열-7",
+      "account_info": "25018276 | 07beaus.mojos@icloud.com:Qsc951300",
+      "pending_count": 0,
+      "scanned_count": 1,
+      "status": "scanned",
+      "current": null
+    },
+    "20260213-001 지정석-206-1- -206구역 6열-11": {
+      "seat_key": "20260213-001 지정석-206-1- -206구역 6열-11",
+      "seat_label": "20260213-001 지정석-206-1- -206구역 6열-11",
+      "account_info": "25018276 | vaster.deuce0b@icloud.com:Qsc951300",
+      "pending_count": 1,
+      "scanned_count": 0,
+      "status": "pending",
+      "current": {
+        "qr_url": "https://secureapi.ext.eximbay.com/servlet/QRCodeGenerator?qrtxt=weixin://wxpay/bizpayurl?pr=3F0zpDPz3&width=265&height=265",
+        "message_link": "https://discord.com/channels/1374796952688136262/1374797975452127332/1462689123172225117",
+        "captured_at": 1768802663.4165235,
+        "expires_at": 1768803078.4165235
+      }
+    },
+    "20260213-001 지정석-212-1- -A2구역 4열-21": {
+      "seat_key": "20260213-001 지정석-212-1- -A2구역 4열-21",
+      "seat_label": "20260213-001 지정석-212-1- -A2구역 4열-21",
+      "account_info": "25018276 | 07beaus.mojos@icloud.com:Qsc951300",
+      "pending_count": 1,
+      "scanned_count": 0,
+      "status": "pending",
+      "current": {
+        "qr_url": "https://secureapi.ext.eximbay.com/servlet/QRCodeGenerator?qrtxt=weixin://wxpay/bizpayurl?pr=3QHeGoHz3&width=265&height=265",
+        "message_link": "https://discord.com/channels/1374796952688136262/1374797975452127332/1462712765796974745",
+        "captured_at": 1768808300.3348944,
+        "expires_at": 1768808715.3348944
+      }
+    },
+    "20260213-001 지정석-306-1- -306구역 20열-16": {
+      "seat_key": "20260213-001 지정석-306-1- -306구역 20열-16",
+      "seat_label": "20260213-001 지정석-306-1- -306구역 20열-16",
+      "account_info": "25018276 | romance_page.0z@icloud.com:Qsc951300",
+      "pending_count": 1,
+      "scanned_count": 0,
+      "status": "pending",
+      "current": {
+        "qr_url": "https://secureapi.ext.eximbay.com/servlet/QRCodeGenerator?qrtxt=weixin://wxpay/bizpayurl?pr=nRXXniGz1&width=265&height=265",
+        "message_link": "https://discord.com/channels/1374796952688136262/1374797975452127332/1462712770087878702",
+        "captured_at": 1768808301.4141545,
+        "expires_at": 1768808716.4141545
+      }
+    },
+    "20260213-001 지정석-212-1- -A2구역 3열-20": {
+      "seat_key": "20260213-001 지정석-212-1- -A2구역 3열-20",
+      "seat_label": "20260213-001 지정석-212-1- -A2구역 3열-20",
+      "account_info": "25018276 | vaster.deuce0b@icloud.com:Qsc951300",
+      "pending_count": 1,
+      "scanned_count": 0,
+      "status": "pending",
+      "current": {
+        "qr_url": "https://secureapi.ext.eximbay.com/servlet/QRCodeGenerator?qrtxt=weixin://wxpay/bizpayurl?pr=MdphlAmz1&width=265&height=265",
+        "message_link": "https://discord.com/channels/1374796952688136262/1374797975452127332/1462712773057187983",
+        "captured_at": 1768808302.0666442,
+        "expires_at": 1768808717.0666442
+      }
+    },
+    "20260213-001 지정석-213-1- -A3구역 11열-6": {
+      "seat_key": "20260213-001 지정석-213-1- -A3구역 11열-6",
+      "seat_label": "20260213-001 지정석-213-1- -A3구역 11열-6",
+      "account_info": "25018276 | micron_gymnast.0k@icloud.com:Qsc951300",
+      "pending_count": 1,
+      "scanned_count": 0,
+      "status": "pending",
+      "current": {
+        "qr_url": "https://secureapi.ext.eximbay.com/servlet/QRCodeGenerator?qrtxt=weixin://wxpay/bizpayurl?pr=KG7QZFgz3&width=265&height=265",
+        "message_link": "https://discord.com/channels/1374796952688136262/1374797975452127332/1462712796889481369",
+        "captured_at": 1768808307.7505066,
+        "expires_at": 1768808722.7505066
+      }
+    },
+    "20260213-001 지정석-412-1- -B2구역 5열-12": {
+      "seat_key": "20260213-001 지정석-412-1- -B2구역 5열-12",
+      "seat_label": "20260213-001 지정석-412-1- -B2구역 5열-12",
+      "account_info": "25018276 | redhead-stat-0b@icloud.com:Qsc951300",
+      "pending_count": 1,
+      "scanned_count": 0,
+      "status": "pending",
+      "current": {
+        "qr_url": "https://secureapi.ext.eximbay.com/servlet/QRCodeGenerator?qrtxt=weixin://wxpay/bizpayurl?pr=zUWv6xaz3&width=265&height=265",
+        "message_link": "https://discord.com/channels/1374796952688136262/1374797975452127332/1462712812240634020",
+        "captured_at": 1768808311.4208024,
+        "expires_at": 1768808726.4208024
+      }
+    },
+    "20260213-001 지정석-415-1- -B5구역 9열-20": {
+      "seat_key": "20260213-001 지정석-415-1- -B5구역 9열-20",
+      "seat_label": "20260213-001 지정석-415-1- -B5구역 9열-20",
+      "account_info": "25018276 | 07beaus.mojos@icloud.com:Qsc951300",
+      "pending_count": 1,
+      "scanned_count": 0,
+      "status": "pending",
+      "current": {
+        "qr_url": "https://secureapi.ext.eximbay.com/servlet/QRCodeGenerator?qrtxt=weixin://wxpay/bizpayurl?pr=8zdAmRDz3&width=265&height=265",
+        "message_link": "https://discord.com/channels/1374796952688136262/1374797975452127332/1462713610659823712",
+        "captured_at": 1768808501.80411,
+        "expires_at": 1768808916.80411
+      }
+    },
+    "20260213-001 지정석-206-1- -206구역 5열-11": {
+      "seat_key": "20260213-001 지정석-206-1- -206구역 5열-11",
+      "seat_label": "20260213-001 지정석-206-1- -206구역 5열-11",
+      "account_info": "25018276 | romance_page.0z@icloud.com:Qsc951300",
+      "pending_count": 1,
+      "scanned_count": 0,
+      "status": "pending",
+      "current": {
+        "qr_url": "https://secureapi.ext.eximbay.com/servlet/QRCodeGenerator?qrtxt=weixin://wxpay/bizpayurl?pr=4JfjtC7z1&width=265&height=265",
+        "message_link": "https://discord.com/channels/1374796952688136262/1374797975452127332/1462713611763060840",
+        "captured_at": 1768808502.02421,
+        "expires_at": 1768808917.02421
+      }
+    },
+    "20260213-001 지정석-201-1- -201구역 5열-16": {
+      "seat_key": "20260213-001 지정석-201-1- -201구역 5열-16",
+      "seat_label": "20260213-001 지정석-201-1- -201구역 5열-16",
+      "account_info": "25018276 | vaster.deuce0b@icloud.com:Qsc951300",
+      "pending_count": 1,
+      "scanned_count": 0,
+      "status": "pending",
+      "current": {
+        "qr_url": "https://secureapi.ext.eximbay.com/servlet/QRCodeGenerator?qrtxt=weixin://wxpay/bizpayurl?pr=m9PX7GNz3&width=265&height=265",
+        "message_link": "https://discord.com/channels/1374796952688136262/1374797975452127332/1462713630054158483",
+        "captured_at": 1768808506.3959787,
+        "expires_at": 1768808921.3959787
+      }
+    },
+    "20260213-001 지정석-202-1- -202구역 11열-18": {
+      "seat_key": "20260213-001 지정석-202-1- -202구역 11열-18",
+      "seat_label": "20260213-001 지정석-202-1- -202구역 11열-18",
+      "account_info": "25018276 | redhead-stat-0b@icloud.com:Qsc951300",
+      "pending_count": 1,
+      "scanned_count": 0,
+      "status": "pending",
+      "current": {
+        "qr_url": "https://secureapi.ext.eximbay.com/servlet/QRCodeGenerator?qrtxt=weixin://wxpay/bizpayurl?pr=f43NNJSz3&width=265&height=265",
+        "message_link": "https://discord.com/channels/1374796952688136262/1374797975452127332/1462713643031593170",
+        "captured_at": 1768808509.5617511,
+        "expires_at": 1768808924.5617511
+      }
+    },
+    "20260213-001 지정석-106-1- -106구역 16열-17": {
+      "seat_key": "20260213-001 지정석-106-1- -106구역 16열-17",
+      "seat_label": "20260213-001 지정석-106-1- -106구역 16열-17",
+      "account_info": "25018276 | micron_gymnast.0k@icloud.com:Qsc951300",
+      "pending_count": 1,
+      "scanned_count": 0,
+      "status": "pending",
+      "current": {
+        "qr_url": "https://secureapi.ext.eximbay.com/servlet/QRCodeGenerator?qrtxt=weixin://wxpay/bizpayurl?pr=lgrETEcz3&width=265&height=265",
+        "message_link": "https://discord.com/channels/1374796952688136262/1374797975452127332/1462713675927392378",
+        "captured_at": 1768808517.3386664,
+        "expires_at": 1768808932.3386664
+      }
+    },
+    "20260213-001 지정석-406-1- -406구역 4열-18": {
+      "seat_key": "20260213-001 지정석-406-1- -406구역 4열-18",
+      "seat_label": "20260213-001 지정석-406-1- -406구역 4열-18",
+      "account_info": "25018276 | 07beaus.mojos@icloud.com:Qsc951300",
+      "pending_count": 1,
+      "scanned_count": 0,
+      "status": "pending",
+      "current": {
+        "qr_url": "https://secureapi.ext.eximbay.com/servlet/QRCodeGenerator?qrtxt=weixin://wxpay/bizpayurl?pr=KyuLIVwz1&width=265&height=265",
+        "message_link": "https://discord.com/channels/1374796952688136262/1374797975452127332/1462713888054448348",
+        "captured_at": 1768808567.90473,
+        "expires_at": 1768808982.90473
+      }
+    },
+    "20260213-001 지정석-201-1- -201구역 5열-6": {
+      "seat_key": "20260213-001 지정석-201-1- -201구역 5열-6",
+      "seat_label": "20260213-001 지정석-201-1- -201구역 5열-6",
+      "account_info": "25018276 | micron_gymnast.0k@icloud.com:Qsc951300",
+      "pending_count": 1,
+      "scanned_count": 0,
+      "status": "pending",
+      "current": {
+        "qr_url": "https://secureapi.ext.eximbay.com/servlet/QRCodeGenerator?qrtxt=weixin://wxpay/bizpayurl?pr=ngBtUcFz3&width=265&height=265",
+        "message_link": "https://discord.com/channels/1374796952688136262/1374797975452127332/1462713891506098272",
+        "captured_at": 1768808568.7263763,
+        "expires_at": 1768808983.7263763
+      }
+    },
+    "20260213-001 지정석-212-1- -A2구역 5열-9": {
+      "seat_key": "20260213-001 지정석-212-1- -A2구역 5열-9",
+      "seat_label": "20260213-001 지정석-212-1- -A2구역 5열-9",
+      "account_info": "25018276 | redhead-stat-0b@icloud.com:Qsc951300",
+      "pending_count": 1,
+      "scanned_count": 0,
+      "status": "pending",
+      "current": {
+        "qr_url": "https://secureapi.ext.eximbay.com/servlet/QRCodeGenerator?qrtxt=weixin://wxpay/bizpayurl?pr=xJcy77mz1&width=265&height=265",
+        "message_link": "https://discord.com/channels/1374796952688136262/1374797975452127332/1462713898179497987",
+        "captured_at": 1768808570.3399215,
+        "expires_at": 1768808985.3399215
+      }
+    },
+    "20260213-001 지정석-215-1- -A5구역 9열-16": {
+      "seat_key": "20260213-001 지정석-215-1- -A5구역 9열-16",
+      "seat_label": "20260213-001 지정석-215-1- -A5구역 9열-16",
+      "account_info": "25018276 | vaster.deuce0b@icloud.com:Qsc951300",
+      "pending_count": 1,
+      "scanned_count": 0,
+      "status": "pending",
+      "current": {
+        "qr_url": "https://secureapi.ext.eximbay.com/servlet/QRCodeGenerator?qrtxt=weixin://wxpay/bizpayurl?pr=rEPpnIiz3&width=265&height=265",
+        "message_link": "https://discord.com/channels/1374796952688136262/1374797975452127332/1462713899169353815",
+        "captured_at": 1768808570.6348538,
+        "expires_at": 1768808985.6348538
+      }
+    },
+    "20260213-001 지정석-201-1- -201구역 6열-13": {
+      "seat_key": "20260213-001 지정석-201-1- -201구역 6열-13",
+      "seat_label": "20260213-001 지정석-201-1- -201구역 6열-13",
+      "account_info": "25018276 | vaster.deuce0b@icloud.com:Qsc951300",
+      "pending_count": 1,
+      "scanned_count": 0,
+      "status": "pending",
+      "current": {
+        "qr_url": "https://secureapi.ext.eximbay.com/servlet/QRCodeGenerator?qrtxt=weixin://wxpay/bizpayurl?pr=Bg4QCynz3&width=265&height=265",
+        "message_link": "https://discord.com/channels/1374796952688136262/1374797975452127332/1462719299482419326",
+        "captured_at": 1768809858.2111266,
+        "expires_at": 1768810273.2111266
+      }
+    },
+    "20260213-001 지정석-414-1- -B4구역 17열-6": {
+      "seat_key": "20260213-001 지정석-414-1- -B4구역 17열-6",
+      "seat_label": "20260213-001 지정석-414-1- -B4구역 17열-6",
+      "account_info": "25018276 | micron_gymnast.0k@icloud.com:Qsc951300",
+      "pending_count": 1,
+      "scanned_count": 0,
+      "status": "pending",
+      "current": {
+        "qr_url": "https://secureapi.ext.eximbay.com/servlet/QRCodeGenerator?qrtxt=weixin://wxpay/bizpayurl?pr=1mQIbN6z1&width=265&height=265",
+        "message_link": "https://discord.com/channels/1374796952688136262/1374797975452127332/1462719310886600831",
+        "captured_at": 1768809860.837065,
+        "expires_at": 1768810275.837065
+      }
+    },
+    "20260213-001 지정석-416-1- -B6구역 5열-2": {
+      "seat_key": "20260213-001 지정석-416-1- -B6구역 5열-2",
+      "seat_label": "20260213-001 지정석-416-1- -B6구역 5열-2",
+      "account_info": "25018276 | 07beaus.mojos@icloud.com:Qsc951300",
+      "pending_count": 1,
+      "scanned_count": 0,
+      "status": "pending",
+      "current": {
+        "qr_url": "https://secureapi.ext.eximbay.com/servlet/QRCodeGenerator?qrtxt=weixin://wxpay/bizpayurl?pr=4ARMqiOz3&width=265&height=265",
+        "message_link": "https://discord.com/channels/1374796952688136262/1374797975452127332/1462719320114335897",
+        "captured_at": 1768809863.040273,
+        "expires_at": 1768810278.040273
+      }
+    },
+    "20260213-001 지정석-206-1- -206구역 4열-18": {
+      "seat_key": "20260213-001 지정석-206-1- -206구역 4열-18",
+      "seat_label": "20260213-001 지정석-206-1- -206구역 4열-18",
+      "account_info": "25018276 | romance_page.0z@icloud.com:Qsc951300",
+      "pending_count": 1,
+      "scanned_count": 0,
+      "status": "pending",
+      "current": {
+        "qr_url": "https://secureapi.ext.eximbay.com/servlet/QRCodeGenerator?qrtxt=weixin://wxpay/bizpayurl?pr=TNQFsJsz3&width=265&height=265",
+        "message_link": "https://discord.com/channels/1374796952688136262/1374797975452127332/1462719330386182174",
+        "captured_at": 1768809865.4785528,
+        "expires_at": 1768810280.4785528
+      }
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "discord": {
+    "token": "",
+    "use_user_token": true,
+    "source_channel_ids": []
+  },
+  "keywords": ["payment exported", "wechat"],
+  "countdown_seconds": 415,
+  "seat_field_name_patterns": ["seat info", "seat", "位置", "座位"],
+  "account_field_name_patterns": ["account", "账号", "login", "id", "password", "pass"],
+  "web": {
+    "host": "0.0.0.0",
+    "port": 17889,
+    "public_base_url": ""
+  },
+  "reset_password": "CHANGE_ME",
+  "data_dir": "wechat_qr_server/data"
+}
+
+

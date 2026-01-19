@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WeChat QR Board</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="left">
+        <div class="left-header">
+          <div class="title">位置列表</div>
+          <div class="subtitle" id="stats"></div>
+        </div>
+        <div class="seat-list" id="seatList"></div>
+      </aside>
+
+      <main class="right">
+        <div class="card">
+          <div class="meta">
+            <div class="status-banner" id="statusBanner" style="display: none;"></div>
+            <div class="meta-row">
+              <div class="label">位置</div>
+              <div class="value" id="curSeat">-</div>
+            </div>
+            <div class="meta-row">
+              <div class="label">抓取时间</div>
+              <div class="value" id="curCapturedAt">-</div>
+            </div>
+            <div id="xbotDetails" style="display:none;">
+              <div class="meta-row">
+                <div class="label">日期</div>
+                <div class="value" id="curDate">-</div>
+              </div>
+              <div class="meta-row">
+                <div class="label">座位</div>
+                <div class="value" id="curSeatDetail">-</div>
+              </div>
+              <div class="meta-row">
+                <div class="label">价格</div>
+                <div class="value" id="curPrice">-</div>
+              </div>
+              <div class="meta-row">
+                <div class="label">数量</div>
+                <div class="value" id="curQty">-</div>
+              </div>
+            </div>
+            <div class="meta-row">
+              <div class="label">账号</div>
+              <div class="value mono" id="curAccount">-</div>
+            </div>
+            <div class="meta-row">
+              <div class="label">消息</div>
+              <div class="value">
+                <a id="curLink" href="#" target="_blank" rel="noreferrer">-</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="qr">
+            <img id="qrImg" alt="QR" />
+            <div class="qr-hint" id="qrHint">等待抓取…</div>
+          </div>
+
+          <div class="actions">
+            <button id="btnNext" class="btn primary">下一个（已扫描）</button>
+            <a class="btn" href="/api/csv" target="_blank" rel="noreferrer">下载CSV</a>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div class="toast" id="toast" aria-live="polite"></div>
+    <script src="/static/app.js"></script>
+  </body>
+</html>
+
+

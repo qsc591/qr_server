@@ -1,0 +1,18 @@
+{
+  "discord": {
+    "token": "",
+    "use_user_token": true,
+    "source_channel_ids": []
+  },
+  "keywords": ["wechat", "weixin", "微信", "wxpay", "wx"],
+  "countdown_seconds": 415,
+  "seat_field_name_patterns": ["seat info", "seat", "位置", "座位"],
+  "account_field_name_patterns": ["account", "账号", "login", "id", "password", "pass"],
+  "seats": [],
+  "web": {
+    "host": "127.0.0.1",
+    "port": 17888
+  }
+}
+
+

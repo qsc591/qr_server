@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Group Panel</title>
+    <link rel="stylesheet" href="/static/board.css" />
+  </head>
+  <body>
+    <div class="topbar">
+      <div class="left">
+        <div class="brand">WeChat QR Server</div>
+        <div class="meta">
+          分组：<span id="groupName">-</span>（ID: <span id="groupId">-</span>）
+        </div>
+      </div>
+      <div class="right">
+        <a class="btn" id="shareLink" href="#" target="_blank" rel="noreferrer">复制分享链接</a>
+      </div>
+    </div>
+
+    <iframe id="boardFrame" class="frame" src=""></iframe>
+
+    <script src="/static/group.js"></script>
+  </body>
+</html>
+
+

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WeChat QR Server</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <div class="landing">
+      <div class="panel">
+        <div class="h1">多人付款服务器</div>
+        <div class="p">
+          先创建一个分组（每个分组看到的二维码互不冲突）。把分组链接发给同组成员即可一起处理。
+        </div>
+        <form id="createForm" class="form">
+          <label class="label">分组名称</label>
+          <input class="input" id="groupName" placeholder="例如：A组 / 付款1组" />
+          <button class="btn primary" type="submit">创建分组</button>
+        </form>
+
+        <div class="reset-wrap">
+          <button class="btn danger" id="btnReset" type="button">初始化分组（清空所有分组）</button>
+          <div class="hint">需要输入重置密码；确认后会删除所有分组与分组数据。</div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="h2">已有分组</div>
+        <div id="groups" class="groups"></div>
+      </div>
+    </div>
+
+    <script src="/static/index.js"></script>
+  </body>
+</html>
+
+
