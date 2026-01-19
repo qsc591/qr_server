@@ -83,6 +83,24 @@ sudo systemctl status caddy --no-pager -l
 # 实时日志
 sudo journalctl -u wechat-qr-server -f
 sudo journalctl -u caddy -f
+
+#查看当前绑定的 DCBOT TOKEN
+sudo cat /etc/wechat-qr-server.env
+#更换绑定的TOKEN
+#进入这个文件
+DISCORD_TOKEN=NEW_TOKEN_HERE（改成新的)
+
+
+#编辑 检测频道
+/root/dc_cart_site/wechat_qr_server/config.json
+"source_channel_ids": [1382031606969274422]  方括号内添加 每个,分开
+
+#编辑重置密码 找到
+"reset_password": "123123123",
+
+
+#改完之后 运行
+sudo systemctl restart wechat-qr-server
 ```
 
 ---
@@ -137,6 +155,7 @@ sudo journalctl -u caddy -n 200 --no-pager
 重置分组：
 
 - 首页 “初始化分组（清空所有分组）” 按钮（需要 `reset_password`）
+
 
 
 
