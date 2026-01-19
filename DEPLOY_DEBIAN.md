@@ -22,9 +22,16 @@
 
 ## 1) 上传代码到服务器
 
-把仓库内容放到服务器某个目录，例如：
+推荐直接在服务器用 GitHub 拉取到目录（示例仓库：`qsc591/qr_server`）：
 
-- `/root/dc_cart_site`
+```bash
+sudo apt update && sudo apt install -y git
+
+cd /root
+rm -rf dc_cart_site
+git clone https://github.com/qsc591/qr_server dc_cart_site
+cd /root/dc_cart_site
+```
 
 要求目录下至少存在：
 
@@ -39,7 +46,6 @@
 在服务器上：
 
 ```bash
-cd /root/dc_cart_site
 chmod +x scripts/install_debian.sh
 
 export DISCORD_TOKEN="你的token"
