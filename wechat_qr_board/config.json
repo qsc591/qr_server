@@ -1,8 +1,8 @@
 {
   "discord": {
-    "token": "MTI1MTA4NDY4NDk1NjI3MDcwNg.GAOfNk.b6Tx-4LG3S8i0REFUGQ6f5_9BqnjBBJIoB1iyk",
+    "token": "你的dcbot token",
     "use_user_token": true,
-    "source_channel_ids": [1374797975452127332,1381707134164668526]
+    "source_channel_ids": [需要搜索的频道","分割]
   },
   "keywords": ["payment exported", "wechat"],
   "countdown_seconds": 415,
@@ -14,5 +14,6 @@
     "port": 17888
   }
 }
+
 
 
