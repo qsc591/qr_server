@@ -48,11 +48,11 @@ cd /root/dc_cart_site
 ```bash
 chmod +x scripts/install_debian.sh
 
-export DISCORD_TOKEN="你的token"
+export DISCORD_TOKEN=DCBOT TOKEN
 
 sudo bash scripts/install_debian.sh \
   --domain itpdash.online \
-  --channel-ids "1374797975452127332,1381707134164668526" \
+  --channel-ids "你需要监控的频道ID<,>分割" \
   --app-dir /root/dc_cart_site \
   --reset-password "CHANGE_ME"
 ```
@@ -137,5 +137,6 @@ sudo journalctl -u caddy -n 200 --no-pager
 重置分组：
 
 - 首页 “初始化分组（清空所有分组）” 按钮（需要 `reset_password`）
+
 
 
