@@ -51,7 +51,7 @@ chmod +x scripts/install_debian.sh
 export DISCORD_TOKEN=DCBOT TOKEN
 
 sudo bash scripts/install_debian.sh \
-  --domain itpdash.online \
+  --domain "改成你的域名" \
   --channel-ids "你需要监控的频道ID<,>分割" \
   --app-dir /root/dc_cart_site \
   --reset-password "CHANGE_ME"
@@ -71,6 +71,12 @@ sudo bash scripts/install_debian.sh \
 ## 3) 常用运维命令
 
 ```bash
+#证书失效的情况下
+
+sudo systemctl reload caddy
+sudo journalctl -u caddy -n 80 --no-pager
+
+
 # 服务启动/停止/重启
 sudo systemctl start wechat-qr-server
 sudo systemctl stop wechat-qr-server
@@ -155,6 +161,7 @@ sudo journalctl -u caddy -n 200 --no-pager
 重置分组：
 
 - 首页 “初始化分组（清空所有分组）” 按钮（需要 `reset_password`）
+
 
 
 
