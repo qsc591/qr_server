@@ -24,6 +24,10 @@ class DiscordConfig:
 class AppConfig:
     discord: DiscordConfig
     keywords: List[str]
+    kakao_group_enabled: bool = True
+    kakao_group_id: str = "kakao"
+    kakao_group_name: str = "Kakao Pay"
+    kakao_group_password: str = ""
     countdown_seconds: int = 415
     seat_field_name_patterns: List[str] = None  # type: ignore[assignment]
     account_field_name_patterns: List[str] = None  # type: ignore[assignment]
@@ -58,6 +62,10 @@ def load_config(config_path: str) -> AppConfig:
     return AppConfig(
         discord=discord_cfg,
         keywords=[str(x) for x in (raw.get("keywords") or [])],
+        kakao_group_enabled=bool(raw.get("kakao_group_enabled", True)),
+        kakao_group_id=str(raw.get("kakao_group_id") or "kakao").strip() or "kakao",
+        kakao_group_name=str(raw.get("kakao_group_name") or "Kakao Pay").strip() or "Kakao Pay",
+        kakao_group_password=str(raw.get("kakao_group_password") or "").strip(),
         countdown_seconds=int(raw.get("countdown_seconds") or 415),
         seat_field_name_patterns=[str(x).lower() for x in (raw.get("seat_field_name_patterns") or ["seat info", "seat", "位置", "座位"])],
         account_field_name_patterns=[str(x).lower() for x in (raw.get("account_field_name_patterns") or ["account", "账号", "login", "id", "password", "pass"])],

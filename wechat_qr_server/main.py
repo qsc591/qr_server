@@ -8,7 +8,7 @@ from typing import Optional
 import discord
 from aiohttp import web
 
-from wechat_qr_board.extract import choose_seat_key, extract_wechat_qr_entries
+from wechat_qr_board.extract import extract_kakao_pay_entries, extract_wechat_qr_entries
 
 from .config import default_config_path, load_config
 from .groups import GroupManager
@@ -60,7 +60,9 @@ async def main_async() -> None:
     if not os.path.isabs(data_dir):
         data_dir = os.path.join(os.path.dirname(__file__), data_dir)
 
-    groups = GroupManager(data_dir=data_dir)
+    groups = GroupManager(
+        data_dir=data_dir,
+    )
     groups.reset_all_groups()
 
     app = create_app(groups, cfg.web.public_base_url, cfg.reset_password)
@@ -82,6 +84,23 @@ async def main_async() -> None:
         ch_id = getattr(ch, "id", None)
         if ch_id not in cfg.discord.source_channel_ids:
             return
+
+        if getattr(cfg, "kakao_group_enabled", True):
+            kakao_result = extract_kakao_pay_entries(
+                message,
+                seat_field_name_patterns=cfg.seat_field_name_patterns,
+                account_field_name_patterns=cfg.account_field_name_patterns,
+                countdown_seconds=cfg.countdown_seconds,
+            )
+            if kakao_result:
+                seat_key, seat_label, account_info, items = kakao_result
+                groups.distribute_kakao_items(
+                    seat_key=seat_key,
+                    seat_label=seat_label,
+                    account_info=account_info,
+                    items=items,
+                )
+                return
 
         result = extract_wechat_qr_entries(
             message,
