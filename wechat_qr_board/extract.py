@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 import re
 import time
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
@@ -9,6 +10,7 @@ _URL_RE = re.compile(r"https?://[^\s<>()]+", re.IGNORECASE)
 _MD_URL_RE = re.compile(r"\((https?://[^\s)]+)\)")
 EXIMBAY_QR_KEYWORD = "secureapi.ext.eximbay.com/servlet/QRCodeGenerator"
 XBOT_QR_PREFIX = "https://api.xbotaio.com/api/v1/short-url/"
+SPIDER_FOOTER_KEYWORD = "spider browser"
 
 
 def sanitize_url(url: str) -> str:
@@ -101,6 +103,113 @@ def _has_xbot_footer(embed_dict: Dict) -> bool:
     if "xbot" in title.lower():
         return True
     return False
+
+
+def _has_spider_footer(embed_dict: Dict) -> bool:
+    footer = embed_dict.get("footer") or {}
+    if isinstance(footer, dict):
+        txt = str(footer.get("text") or "")
+        if SPIDER_FOOTER_KEYWORD in txt.lower():
+            return True
+    title = str(embed_dict.get("title") or "")
+    if "spider" in title.lower():
+        # 兜底：多数 spider 消息 title/description 也会带 spider
+        return True
+    return False
+
+
+def _extract_spider_fields(message) -> Dict[str, str]:
+    """
+    Spider 的 embed.fields 按 name -> value 映射（取第一个 Spider embed）。
+    """
+    embeds = getattr(message, "embeds", None) or []
+    for em in embeds:
+        try:
+            d = em.to_dict()
+        except Exception:
+            continue
+        if not _has_spider_footer(d):
+            continue
+        out: Dict[str, str] = {}
+        for f in (d.get("fields") or []):
+            if not isinstance(f, dict):
+                continue
+            name = str(f.get("name") or "").strip()
+            val = str(f.get("value") or "").strip()
+            if name and val and name not in out:
+                out[name] = val
+        return out
+    return {}
+
+
+def _extract_spider_qr_url_from_embeds(message) -> Optional[str]:
+    """
+    Spider 的 WeChat 二维码通常在 fields 里：
+    - name: Checkout Link(Wechat)
+    - value: [Click](https://secureapi.ext.eximbay.com/servlet/QRCodeGenerator?...qrtxt=weixin://...)
+    """
+    embeds = getattr(message, "embeds", None) or []
+    for em in embeds:
+        try:
+            d = em.to_dict()
+        except Exception:
+            continue
+        if not _has_spider_footer(d):
+            continue
+        for f in (d.get("fields") or []):
+            if not isinstance(f, dict):
+                continue
+            name = str(f.get("name") or "").strip().lower()
+            if "checkout" in name and "wechat" in name:
+                val = sanitize_url(str(f.get("value") or ""))
+                if val and (EXIMBAY_QR_KEYWORD.lower() in val.lower()) and ("qrtxt=weixin://" in val.lower()):
+                    return val
+    return None
+
+
+def _parse_spider_event_time(text: str) -> Dict[str, str]:
+    """
+    Event Time: 2026-04-16T10:30:00.000Z
+    返回：
+    - date_key: YYYYMMDD
+    - show_time: YYYY-MM-DD HH:mm
+    """
+    out = {"date_key": "", "show_time": ""}
+    t = (text or "").strip()
+    if not t:
+        return out
+    try:
+        # fromisoformat 不接受 'Z'，做替换
+        dt = datetime.fromisoformat(t.replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        # 展示用：按 UTC 输出（避免服务器时区不一致造成歧义）
+        dt_utc = dt.astimezone(timezone.utc)
+        ymd = dt_utc.strftime("%Y%m%d")
+        out["date_key"] = ymd
+        out["show_time"] = dt_utc.strftime("%Y-%m-%d %H:%M")
+    except Exception:
+        # 兜底：仅提取日期
+        m = re.search(r"(\d{4})-(\d{2})-(\d{2})", t)
+        if m:
+            out["date_key"] = f"{m.group(1)}{m.group(2)}{m.group(3)}"
+    return out
+
+
+def _parse_spider_timestamp_ms(text: str) -> Optional[float]:
+    t = (text or "").strip()
+    if not t:
+        return None
+    if not re.fullmatch(r"\d{10,16}", t):
+        return None
+    try:
+        n = int(t)
+        # 猜测：13 位为毫秒
+        if n > 10_000_000_000:
+            return float(n) / 1000.0
+        return float(n)
+    except Exception:
+        return None
 
 
 def _extract_xbot_qr_url_from_embeds(message) -> Optional[str]:
@@ -349,6 +458,34 @@ def filter_qr_urls(urls: Iterable[str]) -> List[str]:
     return uniq
 
 
+def filter_kakao_qr_urls(urls: Iterable[str]) -> List[str]:
+    """
+    仅抓取 Kakao Pay 的二维码图片（T-Splash）：
+    例如：
+    https://kakaopayqr.s3.amazonaws.com/<hex>.png
+    """
+    out: List[str] = []
+    for u in urls:
+        u = sanitize_url(u)
+        if not u:
+            continue
+        ul = u.lower()
+        if "kakaopayqr.s3.amazonaws.com/" not in ul:
+            continue
+        if not (ul.endswith(".png") or ul.endswith(".jpg") or ul.endswith(".jpeg") or ul.endswith(".webp")):
+            continue
+        out.append(u)
+    # 去重
+    seen = set()
+    uniq: List[str] = []
+    for u in out:
+        if u in seen:
+            continue
+        seen.add(u)
+        uniq.append(u)
+    return uniq
+
+
 def _parse_discord_timestamp(text: str) -> Optional[float]:
     """
     解析 <t:1768810703:F> 这种格式，取第一个 timestamp。
@@ -418,6 +555,43 @@ def extract_wechat_qr_entries(
     - account_info
     - items: [(qr_url, message_link, captured_at, expires_at, meta), ...]
     """
+    # ===== Spider 分支（不与 T-Splash 混淆；二维码在字段里）=====
+    spider_qr = _extract_spider_qr_url_from_embeds(message)
+    if spider_qr:
+        fields = _extract_spider_fields(message)
+        seat_detail = (fields.get("Seat") or "").strip()
+        price = (fields.get("Price") or "").strip()
+        event_time = (fields.get("Event Time") or "").strip()
+        task_id = (fields.get("Task Id") or "").strip()
+        product_id = (fields.get("Product Id") or "").strip()
+        product = (fields.get("Product") or "").strip()
+        product_url = sanitize_url(fields.get("Product Url") or "")
+        captured_at = _parse_spider_timestamp_ms(fields.get("Timestamp") or "") or time.time()
+
+        time_info = _parse_spider_event_time(event_time)
+        date_key = time_info.get("date_key") or ""
+        seat_label = f"{date_key} {seat_detail}".strip() if date_key else (seat_detail or "Unknown")
+        # seat_key 用 task_id（或 timestamp）做唯一性
+        uniq = task_id or str(int(captured_at))
+        seat_key = f"{uniq} {seat_label}".strip() if uniq else choose_seat_key(seat_label)
+
+        account_info = extract_account_info_from_embeds(message, account_field_name_patterns)
+        link = make_message_link(message)
+        expires_at = float(captured_at) + float(countdown_seconds)
+
+        meta = {
+            "source": "spider",
+            "seat_detail": seat_detail,
+            "price": price,
+            "date": time_info.get("show_time") or "",
+            "task_id": task_id,
+            "product_id": product_id,
+            "product": product,
+            "product_url": product_url,
+        }
+        items = [(spider_qr, link, float(captured_at), float(expires_at), meta)]
+        return seat_key, seat_label, account_info, items
+
     # ===== Xbot 分支（不与 T-Splash 混淆）=====
     # 注意：Xbot 支付可能是 alipay 等，不一定包含 wechat/payment exported 等关键词，
     # 所以 Xbot 必须先判定，不能被 keywords 过滤挡掉。
@@ -471,6 +645,38 @@ def extract_wechat_qr_entries(
 
     now = time.time()
     items = [(u, link, now, now + float(countdown_seconds), {"source": "eximbay"}) for u in qr_urls]
+    seat_key = choose_seat_key(seat_label)
+    return seat_key, seat_label, account_info, items
+
+
+def extract_kakao_pay_entries(
+    message,
+    *,
+    keywords: Sequence[str] = ("payment exported", "kakao"),
+    seat_field_name_patterns: Sequence[str],
+    account_field_name_patterns: Sequence[str],
+    countdown_seconds: int,
+) -> Optional[Tuple[str, str, str, List[Tuple[str, str, float, float, Dict[str, str]]]]]:
+    """
+    Kakao Pay 专用（服务端固定分组用）：
+    - 仅当 message 文本/embeds 命中所有 keywords（默认：payment exported + kakao）才返回
+    - 不做 Eximbay/weixin 限制，直接提取消息里的图片 URL 作为二维码候选
+    """
+    hay = message_text_haystack(message)
+    if not match_all_keywords(hay, keywords):
+        return None
+
+    seat_label = extract_seat_label_from_embeds(message, seat_field_name_patterns) or "Unknown"
+    account_info = extract_account_info_from_embeds(message, account_field_name_patterns)
+    link = make_message_link(message)
+
+    urls = extract_all_image_urls(message)
+    qr_urls = filter_kakao_qr_urls(urls)
+    if not qr_urls:
+        return None
+
+    now = time.time()
+    items = [(u, link, now, now + float(countdown_seconds), {"source": "kakao_tsplash"}) for u in qr_urls]
     seat_key = choose_seat_key(seat_label)
     return seat_key, seat_label, account_info, items
 
