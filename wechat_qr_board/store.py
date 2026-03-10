@@ -90,6 +90,24 @@ class Store:
             "seats": [seat_state_to_dict(s) for s in seats],
         }
 
+    def group_summary(self) -> Dict[str, int]:
+        """
+        给 server 首页用：返回该分组的简要统计信息。
+        - pending_total: 待扫码二维码总数
+        - completed_seats: 已完成(至少扫过一次且当前无 pending)的座位数
+        - total_seats: 座位总数
+        """
+        with self._lock:
+            seats = list(self.seats.values())
+        pending_total = sum(len(s.pending) for s in seats)
+        completed_seats = sum(1 for s in seats if (not s.pending) and bool(s.scanned))
+        total_seats = len(seats)
+        return {
+            "pending_total": int(pending_total),
+            "completed_seats": int(completed_seats),
+            "total_seats": int(total_seats),
+        }
+
     def scan_next(self, seat_key: str) -> Optional[str]:
         """
         将 seat 的当前二维码标记为 scanned，并写 CSV。

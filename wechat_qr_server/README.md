@@ -19,6 +19,8 @@
 
 - `discord.source_channel_ids`: 监听的频道ID
 - `keywords`: 过滤关键词（你当前本地版是只收 Eximbay QRCodeGenerator weixin）
+- `kakao_group_enabled`: 是否启用 Kakao 抓取与分发（关闭则完全不处理 Kakao 消息）
+- `reset_password`: 初始化/重置密码（用于 `/api/reset`；同时用于创建/进入 Kakao 分组）
 - `web.host/web.port`: 服务监听地址/端口
 - `web.public_base_url`: 可选，用于生成分享链接（例如 `https://pay.example.com`）
 
@@ -46,12 +48,11 @@ python -m wechat_qr_server
 
 ## 3) 使用流程（多人协作）
 
-1. 管理员打开 `/`，创建多个分组（例如 A组/B组/…）
+1. 管理员打开 `/`，创建多个分组：
+   - **微信组**：接收 WeChat/Eximbay/Xbot（按“微信组”集合轮询）
+   - **Kakao组**：仅接收 Kakao（按“Kakao组”集合轮询；创建/进入都使用 `reset_password`）
 2. 点击“进入”，把分组页面链接 `/g/<group_id>` 发给对应成员
-3. Discord 来新支付码后，后台会按分组轮询分发：
-   - A 看到第 1 个码
-   - B 看到第 2 个码
-   - …
+3. Discord 来新支付码后，后台会按各自集合轮询分发（微信与 Kakao **互不影响**）
 4. 每个分组在自己的面板点“下一个（已扫描）”，会写入该分组的 CSV
 
 ---
@@ -60,5 +61,11 @@ python -m wechat_qr_server
 
 - **直接暴露端口**：在云服务器安全组放行 `web.port`（不推荐长期）
 - **推荐反代**：用 Nginx/Caddy 反代到 `127.0.0.1:<port>`，并配 HTTPS
+
+---
+
+## 5) Debian + GitHub 一键安装（推荐）
+
+如果你要直接在 Debian 服务器从 GitHub 拉取并一键部署，请看：`docs/DEPLOY_DEBIAN.md`。
 
 

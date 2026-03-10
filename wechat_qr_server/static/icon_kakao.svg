@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="120" viewBox="0 0 256 120">
+  <rect x="8" y="14" width="240" height="92" rx="46" fill="#FEE500"/>
+  <!-- bubble -->
+  <path d="M70 45c-17 0-30 10-30 23 0 7 4 14 11 18l-4 12 14-7c3 1 6 2 9 2 17 0 30-10 30-23S87 45 70 45Z" fill="#191919"/>
+  <!-- pay text -->
+  <text x="118" y="78" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="42" font-weight="800" fill="#191919">pay</text>
+</svg>
+
+
+

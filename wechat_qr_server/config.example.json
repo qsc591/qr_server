@@ -5,6 +5,7 @@
     "source_channel_ids": []
   },
   "keywords": ["payment exported", "wechat"],
+  "kakao_group_enabled": true,
   "countdown_seconds": 415,
   "seat_field_name_patterns": ["seat info", "seat", "位置", "座位"],
   "account_field_name_patterns": ["account", "账号", "login", "id", "password", "pass"],

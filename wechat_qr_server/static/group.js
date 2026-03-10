@@ -39,8 +39,15 @@ async function main() {
     shareBtn.textContent = "已复制";
     setTimeout(() => (shareBtn.textContent = "复制分享链接"), 1200);
   };
+
+  const csvBtn = document.getElementById("csvLink");
+  if (csvBtn) {
+    csvBtn.href = `/api/groups/${encodeURIComponent(groupId)}/csv`;
+  }
 }
 
 main();
+
+
 
 

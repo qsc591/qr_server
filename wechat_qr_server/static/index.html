@@ -31,7 +31,42 @@
       </div>
     </div>
 
-    <script src="/static/index.js"></script>
+    <!-- 创建分组：二次确认（选择微信/Kakao） -->
+    <div id="kindModal" class="modal" style="display:none;">
+      <div class="modal-mask"></div>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-label="选择分组类型">
+        <div class="modal-title">选择分组类型</div>
+        <div class="modal-sub">微信组与 Kakao 组各自轮询，互不影响。</div>
+        <div class="kind-grid">
+          <button class="kind-btn" id="pickWechat" type="button">
+            <img src="/static/icon_wechat.svg" alt="WeChat" />
+            <div class="kind-name">微信组</div>
+            <div class="kind-desc">接收 WeChat/Eximbay/Xbot</div>
+          </button>
+          <button class="kind-btn" id="pickKakao" type="button">
+            <img src="/static/icon_kakao.svg" alt="Kakao" />
+            <div class="kind-name">Kakao组</div>
+            <div class="kind-desc">仅接收 Kakao（使用重置密码）</div>
+          </button>
+        </div>
+
+        <div id="kakaoPwWrap" style="display:none; margin-top: 12px;">
+          <label class="label">请输入重置分组密码（reset_password）</label>
+          <input class="input" id="kakaoPassword" type="password" placeholder="请输入重置密码" />
+          <div class="hint">Kakao 分组的登录密码将自动使用该重置密码。</div>
+          <div class="modal-actions">
+            <button class="btn" id="btnCancel" type="button">取消</button>
+            <button class="btn primary" id="btnCreateKakao" type="button">确认绑定 Kakao 组</button>
+          </div>
+        </div>
+
+        <div class="modal-actions" id="modalActionsDefault">
+          <button class="btn" id="btnClose" type="button">关闭</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/static/index.js?v=20260120_2"></script>
   </body>
 </html>
 

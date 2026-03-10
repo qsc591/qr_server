@@ -155,7 +155,7 @@ function render(state) {
     curCapturedAtEl.textContent = fmtDateTime(ts);
   }
   const meta = (shown && shown.meta) ? shown.meta : {};
-  const isXbot = meta && meta.source === "xbot";
+  const isXbot = meta && (meta.source === "xbot" || meta.source === "spider");
   if (xbotDetailsEl) xbotDetailsEl.style.display = isXbot ? "block" : "none";
   if (isXbot) {
     if (curDateEl) curDateEl.textContent = meta.date || "-";

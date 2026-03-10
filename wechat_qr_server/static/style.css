@@ -30,28 +30,28 @@ body {
 
 .panel {
   width: 100%;
-  max-width: 720px;
+  max-width: 920px;
   border: 1px solid var(--border);
   background: rgba(15, 26, 46, 0.9);
   border-radius: 16px;
-  padding: 18px;
+  padding: 22px;
 }
 
 .h1 {
-  font-size: 22px;
+  font-size: 26px;
   font-weight: 900;
 }
 
 .h2 {
   margin-top: 12px;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 800;
 }
 
 .p {
   margin-top: 10px;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.5;
 }
 
@@ -61,31 +61,121 @@ body {
   gap: 10px;
 }
 
+/* ===== Modal (choose group kind) ===== */
+.modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  z-index: 50;
+}
+
+.modal-mask {
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.62);
+  backdrop-filter: blur(6px);
+}
+
+.modal-card {
+  position: relative;
+  width: min(760px, 100%);
+  border: 1px solid var(--border);
+  background: rgba(15, 26, 46, 0.98);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.modal-sub {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.kind-grid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.kind-btn {
+  border: 1px solid var(--border);
+  background: rgba(231, 238, 252, 0.06);
+  color: var(--text);
+  border-radius: 14px;
+  padding: 14px;
+  cursor: pointer;
+  text-align: left;
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.kind-btn:hover {
+  border-color: rgba(255, 204, 0, 0.35);
+  background: rgba(255, 204, 0, 0.08);
+}
+
+.kind-btn img {
+  width: 64px;
+  height: 64px;
+}
+
+.kind-name {
+  font-weight: 900;
+  font-size: 18px;
+}
+
+.kind-desc {
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.modal-actions {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 .label {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
 }
 
 .input {
   width: 100%;
-  padding: 12px 12px;
+  padding: 14px 14px;
   border-radius: 12px;
   border: 1px solid var(--border);
   background: rgba(231, 238, 252, 0.06);
   color: var(--text);
   outline: none;
+  font-size: 16px;
 }
 
 .btn {
   border: 1px solid var(--border);
   background: rgba(231, 238, 252, 0.06);
   color: var(--text);
-  padding: 10px 14px;
+  padding: 12px 16px;
   border-radius: 12px;
   cursor: pointer;
   font-weight: 800;
   text-decoration: none;
   text-align: center;
+  font-size: 15px;
 }
 
 .btn.primary {
@@ -124,24 +214,70 @@ body {
 
 .group-row {
   display: grid;
-  grid-template-columns: 1fr 120px;
+  grid-template-columns: 1fr 80px auto;
   gap: 12px;
   align-items: center;
   border: 1px solid var(--border);
   background: rgba(16, 28, 51, 0.6);
   border-radius: 12px;
-  padding: 12px;
+  padding: 14px;
+}
+
+.gactions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.gactions .btn {
+  min-width: 110px;
+}
+
+.gicon {
+  display: grid;
+  place-items: center;
+}
+
+.gicon img {
+  width: 38px;
+  height: 38px;
 }
 
 .gname {
   font-weight: 900;
-  font-size: 14px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gtags {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.tag {
+  font-size: 11px;
+  font-weight: 900;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 204, 0, 0.35);
+  background: rgba(255, 204, 0, 0.10);
+  color: rgba(255, 204, 0, 0.95);
 }
 
 .gid {
   margin-top: 4px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--muted);
+}
+
+.gstats {
+  margin-top: 6px;
+  font-size: 13px;
+  color: rgba(231, 238, 252, 0.82);
+  font-weight: 800;
 }
 
 .empty {
