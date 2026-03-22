@@ -36,7 +36,7 @@
       <div class="modal-mask"></div>
       <div class="modal-card" role="dialog" aria-modal="true" aria-label="选择分组类型">
         <div class="modal-title">选择分组类型</div>
-        <div class="modal-sub">微信组与 Kakao 组各自轮询，互不影响。</div>
+        <div class="modal-sub">微信组 / Kakao 组 / ThaiTicketMajor(支付宝) 各自轮询，互不影响。</div>
         <div class="kind-grid">
           <button class="kind-btn" id="pickWechat" type="button">
             <img src="/static/icon_wechat.svg" alt="WeChat" />
@@ -47,6 +47,11 @@
             <img src="/static/icon_kakao.svg" alt="Kakao" />
             <div class="kind-name">Kakao组</div>
             <div class="kind-desc">仅接收 Kakao（使用重置密码）</div>
+          </button>
+          <button class="kind-btn" id="pickTtm" type="button">
+            <img src="/static/icon_ttm.png" alt="ThaiTicketMajor" />
+            <div class="kind-name">ThaiTicketMajor (支付宝)</div>
+            <div class="kind-desc">接收 ThaiTicketMajor export → 转换支付宝二维码</div>
           </button>
         </div>
 
@@ -60,13 +65,34 @@
           </div>
         </div>
 
+        <div id="ttmPgwWrap" style="display:none; margin-top: 12px;">
+          <label class="label">PGW邮箱（可选）</label>
+          <input class="input" id="ttmPgwEmail" placeholder="例如：xxx@gmail.com" />
+          <label class="label" style="margin-top: 10px;">PGW姓名（可选）</label>
+          <input class="input" id="ttmPgwName" placeholder="例如：WENJI Z" />
+          <label class="label" style="margin-top: 10px;">读取支付宝二维码</label>
+          <div class="hint" style="margin-top: 6px;">
+            <label style="display:flex; gap:8px; align-items:center; cursor:pointer;">
+              <input id="ttmCaptureQr" type="checkbox" checked />
+              <span>开启：显示二维码；关闭：仅提供跳转链接（MPaymentProcess 链接）</span>
+            </label>
+          </div>
+          <div class="hint" style="margin-top: 8px;">
+            可留空：将以空值提交 PGW 信息，不影响其它流程。
+          </div>
+          <div class="modal-actions">
+            <button class="btn" id="btnCancelTtm" type="button">取消</button>
+            <button class="btn primary" id="btnCreateTtm" type="button">确认创建 ThaiTicketMajor 组</button>
+          </div>
+        </div>
+
         <div class="modal-actions" id="modalActionsDefault">
           <button class="btn" id="btnClose" type="button">关闭</button>
         </div>
       </div>
     </div>
 
-    <script src="/static/index.js?v=20260120_2"></script>
+    <script src="/static/index.js?v=20260322_1"></script>
   </body>
 </html>
 

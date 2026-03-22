@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import secrets
+import time
 from typing import Any, Dict
 
 from aiohttp import web
@@ -128,7 +129,7 @@ def create_app(groups: GroupManager, public_base_url: str, reset_password: str) 
     <div id="mount"></div>
     <!-- 直接复用现有 board html -->
     <div id="board_wrapper"></div>
-    <script src="/board_static/boot.js?v=20260120_2"></script>
+    <script src="/board_static/boot.js?v=20260322_1"></script>
   </body>
 </html>"""
         resp = web.Response(text=body, content_type="text/html")
@@ -201,6 +202,25 @@ def create_app(groups: GroupManager, public_base_url: str, reset_password: str) 
         kind = str(body.get("kind") or "wechat").strip().lower()
         password = str(body.get("password") or "").strip()
         admin_password = str(body.get("admin_password") or "").strip()
+        pgw_email = str(body.get("pgw_email") or "").strip()
+        pgw_name = str(body.get("pgw_name") or "").strip()
+        ttm_capture_qr_raw = body.get("ttm_capture_qr", True)
+
+        def _parse_bool(v: Any, default: bool = True) -> bool:
+            if v is None:
+                return default
+            if isinstance(v, bool):
+                return v
+            s = str(v).strip().lower()
+            if s == "":
+                return default
+            if s in ("1", "true", "yes", "y", "on"):
+                return True
+            if s in ("0", "false", "no", "n", "off"):
+                return False
+            return default
+
+        ttm_capture_qr = _parse_bool(ttm_capture_qr_raw, True)
 
         # Kakao 组：不允许用户自定义密码；使用 reset_password 作为“初始化/重置密码”
         if kind == "kakao":
@@ -209,8 +229,19 @@ def create_app(groups: GroupManager, public_base_url: str, reset_password: str) 
             if admin_password != reset_password:
                 raise web.HTTPForbidden(text="重置密码错误")
             password = reset_password
+            # Kakao 不需要 PGW
+            pgw_email = ""
+            pgw_name = ""
+
         try:
-            g = groups.create_group(name, kind=kind, password=password)
+            g = groups.create_group(
+                name,
+                kind=kind,
+                password=password,
+                pgw_email=pgw_email,
+                pgw_name=pgw_name,
+                ttm_capture_qr=ttm_capture_qr,
+            )
         except ValueError as e:
             raise web.HTTPBadRequest(text=str(e))
         share = ""
@@ -230,7 +261,16 @@ def create_app(groups: GroupManager, public_base_url: str, reset_password: str) 
         if public_base_url:
             share = f"{public_base_url.rstrip('/')}/g/{g.group_id}"
         return web.json_response(
-            {"group_id": g.group_id, "name": g.name, "share_url": share, "kind": g.kind, "locked": bool(g.locked)}
+            {
+                "group_id": g.group_id,
+                "name": g.name,
+                "share_url": share,
+                "kind": g.kind,
+                "locked": bool(g.locked),
+                "pgw_email": getattr(g, "pgw_email", ""),
+                "pgw_name": getattr(g, "pgw_name", ""),
+                "ttm_capture_qr": bool(getattr(g, "ttm_capture_qr", True)),
+            }
         )
 
     async def api_group_state(request: web.Request) -> web.Response:
@@ -264,6 +304,36 @@ def create_app(groups: GroupManager, public_base_url: str, reset_password: str) 
         resp.headers["Content-Disposition"] = f'attachment; filename="scan_log_{gid}.csv"'
         return resp
 
+    async def api_group_ttm_csv(request: web.Request) -> web.StreamResponse:
+        gid = request.match_info["group_id"]
+        g = groups.get_group(gid)
+        if not g:
+            raise web.HTTPNotFound()
+        _require_group_auth(request, gid)
+        try:
+            g.store.ensure_ttm_csv_exists()
+            p = g.store.ttm_csv_path
+        except Exception:
+            raise web.HTTPNotFound()
+        resp = web.FileResponse(p)
+        resp.content_type = "text/csv"
+        resp.headers["Content-Disposition"] = f'attachment; filename="ttm_orders_{gid}.csv"'
+        return resp
+
+    async def api_group_ttm_jump(request: web.Request) -> web.Response:
+        gid = request.match_info["group_id"]
+        g = groups.get_group(gid)
+        if not g:
+            raise web.HTTPNotFound()
+        _require_group_auth(request, gid)
+        body: Dict[str, Any] = await request.json()
+        seat_key = str(body.get("seat_key") or "").strip()
+        try:
+            out = g.store.log_ttm_jump(seat_key)
+        except Exception as e:
+            out = {"ok": False, "error": f"{type(e).__name__}: {e}"}
+        return web.json_response(out)
+
     async def api_group_login(request: web.Request) -> web.Response:
         gid = request.match_info["group_id"]
         g = groups.get_group(gid)
@@ -286,6 +356,96 @@ def create_app(groups: GroupManager, public_base_url: str, reset_password: str) 
             max_age=3600 * 24,
         )
         return resp
+
+    async def api_group_qr(request: web.Request) -> web.StreamResponse:
+        gid = request.match_info["group_id"]
+        name = request.match_info["name"]
+        g = groups.get_group(gid)
+        if not g:
+            raise web.HTTPNotFound()
+        _require_group_auth(request, gid)
+        # 安全：仅允许读取 qr 目录下的单个文件名
+        safe = os.path.basename(name or "")
+        if not safe or safe != name:
+            raise web.HTTPNotFound()
+        if not safe.lower().endswith(".png"):
+            raise web.HTTPNotFound()
+        p = os.path.join(g.store.data_dir, "qr", safe)
+        if not os.path.exists(p):
+            raise web.HTTPNotFound()
+        resp = web.FileResponse(p)
+        resp.headers["Cache-Control"] = "no-store"
+        return resp
+
+    async def api_ingest_ttm(request: web.Request) -> web.Response:
+        """
+        ThaiTicketMajor 支付信息入口（由其它程序抓取好二维码后推送到本服务）：
+        POST /api/ingest/ttm
+        body:
+          {
+            "admin_password": "...",   // 若服务器配置了 reset_password，则必须提供且匹配
+            "seat_label": "...",
+            "account_info": "...",
+            "message_link": "...",     // 可选：Discord 消息链接
+            "alipay_url": "https://excashier.alipay.com/standard/auth.htm?...",
+            "qr_png_base64": "...",    // 仅 base64，不含 data: 前缀
+            "product_title": "...",
+            "order_id": "...",
+            "payment_expiry_th": "2026-03-22 12:28:56" // 泰国时区时间字符串
+          }
+        """
+        body: Dict[str, Any] = await request.json()
+        if reset_password:
+            ap = str(body.get("admin_password") or "").strip()
+            if ap != reset_password:
+                raise web.HTTPForbidden(text="bad password")
+
+        seat_label = str(body.get("seat_label") or "").strip() or "TTM"
+        account_info = str(body.get("account_info") or "").strip()
+        message_link = str(body.get("message_link") or "").strip()
+        alipay_url = str(body.get("alipay_url") or "").strip()
+        qr_b64 = str(body.get("qr_png_base64") or "").strip()
+        product_title = str(body.get("product_title") or "").strip()
+        order_id = str(body.get("order_id") or "").strip()
+        exp_th = str(body.get("payment_expiry_th") or "").strip()
+
+        if not (alipay_url and qr_b64 and order_id):
+            raise web.HTTPBadRequest(text="missing fields: alipay_url/qr_png_base64/order_id")
+
+        # expires_at：尽量用传入的泰国时间；否则兜底 10 分钟
+        expires_at = time.time() + 600.0
+        payment_expiry_cn = ""
+        try:
+            from datetime import datetime
+            from zoneinfo import ZoneInfo
+
+            dt = datetime.strptime(exp_th, "%Y-%m-%d %H:%M:%S")
+            dt_th = dt.replace(tzinfo=ZoneInfo("Asia/Bangkok"))
+            dt_cn = dt_th.astimezone(ZoneInfo("Asia/Shanghai"))
+            expires_at = float(dt_cn.timestamp())
+            payment_expiry_cn = dt_cn.strftime("%Y-%m-%d %H:%M:%S")
+        except Exception:
+            pass
+
+        captured_at = time.time()
+        seat_key = f"{order_id} {seat_label}".strip()
+        meta = {
+            "source": "ttm_alipay",
+            "alipay_url": alipay_url,
+            "product_title": product_title,
+            "order_id": order_id,
+            "payment_expiry_th": exp_th,
+            "payment_expiry_cn": payment_expiry_cn,
+            "qr_png_base64": qr_b64,
+        }
+        items = [("ttm", message_link, captured_at, expires_at, meta)]
+        n = groups.distribute_items(
+            seat_key=seat_key,
+            seat_label=seat_label,
+            account_info=account_info,
+            items=items,
+        )
+        return web.json_response({"ok": True, "distributed": int(n)})
 
     async def api_reset(request: web.Request) -> web.Response:
         if not reset_password:
@@ -347,9 +507,13 @@ def create_app(groups: GroupManager, public_base_url: str, reset_password: str) 
     app.router.add_get("/api/groups/{group_id}/state", api_group_state)
     app.router.add_post("/api/groups/{group_id}/scan_next", api_group_scan_next)
     app.router.add_get("/api/groups/{group_id}/csv", api_group_csv)
+    app.router.add_get("/api/groups/{group_id}/ttm_csv", api_group_ttm_csv)
+    app.router.add_get("/api/groups/{group_id}/qr/{name}", api_group_qr)
     app.router.add_post("/api/groups/{group_id}/login", api_group_login)
+    app.router.add_post("/api/groups/{group_id}/ttm_jump", api_group_ttm_jump)
     app.router.add_post("/api/groups/{group_id}/delete", api_delete_group)
     app.router.add_post("/api/reset", api_reset)
+    app.router.add_post("/api/ingest/ttm", api_ingest_ttm)
 
     return app
 

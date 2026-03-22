@@ -29,6 +29,8 @@ class AppConfig:
     kakao_group_name: str = "Kakao Pay"
     kakao_group_password: str = ""
     countdown_seconds: int = 415
+    # ThaiTicketMajor(支付宝) 转换用 client_id（默认值已经在 main.py 固定；这里保留字段用于兼容旧配置）
+    pgw_client_id: str = ""
     seat_field_name_patterns: List[str] = None  # type: ignore[assignment]
     account_field_name_patterns: List[str] = None  # type: ignore[assignment]
     web: WebConfig = field(default_factory=WebConfig)
@@ -67,6 +69,7 @@ def load_config(config_path: str) -> AppConfig:
         kakao_group_name=str(raw.get("kakao_group_name") or "Kakao Pay").strip() or "Kakao Pay",
         kakao_group_password=str(raw.get("kakao_group_password") or "").strip(),
         countdown_seconds=int(raw.get("countdown_seconds") or 415),
+        pgw_client_id=str(raw.get("pgw_client_id") or "").strip(),
         seat_field_name_patterns=[str(x).lower() for x in (raw.get("seat_field_name_patterns") or ["seat info", "seat", "位置", "座位"])],
         account_field_name_patterns=[str(x).lower() for x in (raw.get("account_field_name_patterns") or ["account", "账号", "login", "id", "password", "pass"])],
         web=web_cfg,

@@ -1,0 +1,4 @@
+aiohttp>=3.9.5
+discord.py==2.4.0
+requests>=2.31.0
+playwright>=1.40.0

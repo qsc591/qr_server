@@ -2,6 +2,21 @@ let selectedSeatKey = null;
 let isAdvancing = false;
 let lastShownQrUrl = null;
 let toastTimer = null;
+let ttmJumped = {}; // seat_key -> true (unlock Next after jumping to Alipay)
+
+async function logTtmJump(seatKey) {
+  const k = String(seatKey || "").trim();
+  if (!k) return;
+  try {
+    await fetch("/api/ttm_jump", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ seat_key: k }),
+    });
+  } catch (e) {
+    // ignore
+  }
+}
 
 function splitSeatLabel(label) {
   const s = (label || "").trim();
@@ -75,6 +90,13 @@ function render(state) {
       line2.textContent = parts.bottom;
       name.appendChild(line2);
     }
+    const acc = (seat.account_info || "").trim();
+    if (acc) {
+      const line3 = document.createElement("div");
+      line3.className = "seat-line seat-line-3";
+      line3.textContent = acc.length > 60 ? acc.slice(0, 60) + "…" : acc;
+      name.appendChild(line3);
+    }
 
     const status = document.createElement("div");
     status.className = "seat-status";
@@ -119,11 +141,18 @@ function render(state) {
   const curPriceEl = document.getElementById("curPrice");
   const curQtyEl = document.getElementById("curQty");
   const xbotDetailsEl = document.getElementById("xbotDetails");
+  const ttmDetailsEl = document.getElementById("ttmDetails");
+  const ttmTitleEl = document.getElementById("ttmTitle");
+  const ttmOrderIdEl = document.getElementById("ttmOrderId");
+  const ttmExpiryCnEl = document.getElementById("ttmExpiryCn");
   const curAccountEl = document.getElementById("curAccount");
   const curLinkEl = document.getElementById("curLink");
   const qrImgEl = document.getElementById("qrImg");
   const qrHintEl = document.getElementById("qrHint");
   const btnNextEl = document.getElementById("btnNext");
+  const btnAlipayJumpEl = document.getElementById("btnAlipayJump");
+  const btnDownloadCsvEl = document.getElementById("btnDownloadCsv");
+  const btnDownloadTtmCsvEl = document.getElementById("btnDownloadTtmCsv");
   const statusBannerEl = document.getElementById("statusBanner");
 
   if (!cur) {
@@ -134,6 +163,11 @@ function render(state) {
     if (curPriceEl) curPriceEl.textContent = "-";
     if (curQtyEl) curQtyEl.textContent = "-";
     if (xbotDetailsEl) xbotDetailsEl.style.display = "none";
+    if (ttmDetailsEl) ttmDetailsEl.style.display = "none";
+    if (btnAlipayJumpEl) {
+      btnAlipayJumpEl.style.display = "none";
+      btnAlipayJumpEl.href = "#";
+    }
     curAccountEl.textContent = "-";
     curLinkEl.textContent = "-";
     curLinkEl.href = "#";
@@ -155,8 +189,12 @@ function render(state) {
     curCapturedAtEl.textContent = fmtDateTime(ts);
   }
   const meta = (shown && shown.meta) ? shown.meta : {};
-  const isXbot = meta && (meta.source === "xbot" || meta.source === "spider");
+  const source = meta && meta.source ? String(meta.source) : "";
+  const isXbot = source === "xbot" || source === "spider";
+  const isTtm = source === "ttm_alipay" || source === "ttm_export";
   if (xbotDetailsEl) xbotDetailsEl.style.display = isXbot ? "block" : "none";
+  if (ttmDetailsEl) ttmDetailsEl.style.display = isTtm ? "block" : "none";
+
   if (isXbot) {
     if (curDateEl) curDateEl.textContent = meta.date || "-";
     if (curSeatDetailEl) curSeatDetailEl.textContent = meta.seat_detail || "-";
@@ -168,6 +206,57 @@ function render(state) {
     if (curPriceEl) curPriceEl.textContent = "-";
     if (curQtyEl) curQtyEl.textContent = "-";
   }
+
+  if (isTtm) {
+    if (ttmTitleEl) ttmTitleEl.textContent = meta.product_title || "-";
+    if (ttmOrderIdEl) {
+      const oid = (meta.order_id || "").trim();
+      ttmOrderIdEl.textContent = oid ? oid.slice(0, 7) : "-";
+    }
+    if (ttmExpiryCnEl) {
+      // 兜底：若后端没填 payment_expiry_cn，用 expires_at（浏览器本地时区）显示
+      const s = (meta.payment_expiry_cn || "").trim();
+      const expTs = (shown && shown.expires_at) ? shown.expires_at : null;
+      ttmExpiryCnEl.textContent = s || (expTs ? fmtDateTime(expTs) : "-");
+    }
+  } else {
+    if (ttmTitleEl) ttmTitleEl.textContent = "-";
+    if (ttmOrderIdEl) ttmOrderIdEl.textContent = "-";
+    if (ttmExpiryCnEl) ttmExpiryCnEl.textContent = "-";
+  }
+
+  if (btnAlipayJumpEl) {
+    const u = (meta && meta.alipay_url) ? String(meta.alipay_url) : "";
+    const m = (meta && meta.mpayment_url) ? String(meta.mpayment_url) : "";
+    const jump = (u || m).trim();
+    if (jump) {
+      btnAlipayJumpEl.href = jump;
+      btnAlipayJumpEl.style.display = "inline-block";
+      btnAlipayJumpEl.onclick = () => {
+        if (isTtm && cur && cur.seat_key) {
+          ttmJumped[cur.seat_key] = true;
+          logTtmJump(cur.seat_key);
+          // 点击跳转后允许 Next（即使没有二维码）
+          if (btnNextEl) btnNextEl.disabled = !(cur.current);
+        }
+      };
+    } else {
+      btnAlipayJumpEl.href = "#";
+      btnAlipayJumpEl.style.display = "none";
+      btnAlipayJumpEl.onclick = null;
+    }
+  }
+
+  // 下载按钮：按“当前订单类型”切换显示
+  if (btnDownloadCsvEl && btnDownloadTtmCsvEl) {
+    if (isTtm) {
+      btnDownloadCsvEl.style.display = "none";
+      btnDownloadTtmCsvEl.style.display = "inline-flex";
+    } else {
+      btnDownloadCsvEl.style.display = "inline-flex";
+      btnDownloadTtmCsvEl.style.display = "none";
+    }
+  }
   if (statusBannerEl) {
     if (cur.status === "scanned" && cur.pending_count === 0) {
       statusBannerEl.textContent = "本位置已完成扫码付款";
@@ -177,6 +266,7 @@ function render(state) {
     }
   }
 
+  // “消息”固定为 Discord（避免与下方“点击跳转到支付宝”冲突）
   if (shown && shown.message_link) {
     curLinkEl.textContent = "打开 Discord 消息";
     curLinkEl.href = shown.message_link;
@@ -210,11 +300,22 @@ function render(state) {
     };
   } else {
     qrImgEl.style.display = "none";
+    const u = (meta && meta.alipay_url) ? String(meta.alipay_url) : "";
+    const m = (meta && meta.mpayment_url) ? String(meta.mpayment_url) : "";
+    const jump = (u || m).trim();
+    const allowNextByJump = !!(
+      isTtm &&
+      jump &&
+      cur.current &&
+      (ttmJumped[cur.seat_key] || (meta && meta.jumped_at))
+    );
     qrHintEl.textContent =
       cur.status === "scanned" && cur.pending_count === 0
         ? "本位置已完成扫码付款"
-        : "该位置暂无二维码";
-    btnNextEl.disabled = true;
+        : (isTtm && jump)
+          ? "该位置暂无二维码，请先点击下方“点击跳转到支付宝”后再点 Next"
+          : "该位置暂无二维码";
+    btnNextEl.disabled = !(cur.current && (allowNextByJump));
   }
 
   // 如果正在展示的是 last_scanned（说明已点击过 next），给一个明确提示

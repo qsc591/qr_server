@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 import re
 import time
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
@@ -11,6 +12,74 @@ _MD_URL_RE = re.compile(r"\((https?://[^\s)]+)\)")
 EXIMBAY_QR_KEYWORD = "secureapi.ext.eximbay.com/servlet/QRCodeGenerator"
 XBOT_QR_PREFIX = "https://api.xbotaio.com/api/v1/short-url/"
 SPIDER_FOOTER_KEYWORD = "spider browser"
+_ALIPAY_CASHIER_RE = re.compile(
+    r"https?://excashier\.alipay\.com/standard/auth\.htm\?[^\s<>()]+",
+    re.IGNORECASE,
+)
+
+
+def message_text_raw(message) -> str:
+    parts: List[str] = []
+    content = getattr(message, "content", None)
+    if isinstance(content, str) and content:
+        parts.append(content)
+    embeds = getattr(message, "embeds", None) or []
+    for em in embeds:
+        try:
+            parts.extend(_collect_text_from_embed_dict(em.to_dict()))
+        except Exception:
+            continue
+    return "\n".join(parts)
+
+
+def _extract_ttm_payload_from_text(text: str) -> Dict[str, str]:
+    """
+    从 message 的原始文本中提取 ThaiTicketMajor/支付宝收银台信息：
+    - excashier url
+    - qr_png_base64
+    - product_title
+    - order_id
+    - payment_expiry
+    """
+    t = (text or "").strip()
+    if not t:
+        return {}
+    out: Dict[str, str] = {}
+
+    m = _ALIPAY_CASHIER_RE.search(t)
+    if m:
+        out["alipay_url"] = sanitize_url(m.group(0))
+
+    m2 = re.search(r"\bqr_png_base64\s*=\s*([A-Za-z0-9+/=]{100,})", t)
+    if m2:
+        out["qr_png_base64"] = m2.group(1).strip()
+
+    def _kv(key: str) -> str:
+        mm = re.search(rf"^{re.escape(key)}\s*=\s*(.+)$", t, re.MULTILINE)
+        return (mm.group(1).strip() if mm else "")
+
+    out["product_title"] = _kv("product_title")
+    out["order_id"] = _kv("order_id")
+    out["payment_expiry"] = _kv("payment_expiry")
+    return {k: v for k, v in out.items() if v}
+
+
+def _parse_ttm_expiry_th_to_cn_epoch(exp_th: str) -> Tuple[float, str]:
+    """
+    输入：泰国时区字符串 "YYYY-MM-DD HH:MM:SS"
+    输出：(expires_at_epoch_seconds, cn_string "YYYY-MM-DD HH:MM:SS")
+    """
+    dt = datetime.strptime(exp_th.strip(), "%Y-%m-%d %H:%M:%S")
+    try:
+        dt_th = dt.replace(tzinfo=ZoneInfo("Asia/Bangkok"))
+        dt_cn = dt_th.astimezone(ZoneInfo("Asia/Shanghai"))
+        return float(dt_cn.timestamp()), dt_cn.strftime("%Y-%m-%d %H:%M:%S")
+    except Exception:
+        # Windows 可能缺 tzdb；Bangkok UTC+7 -> Shanghai UTC+8
+        from datetime import timedelta
+
+        dt_cn = dt + timedelta(hours=1)
+        return float(dt_cn.timestamp()), dt_cn.strftime("%Y-%m-%d %H:%M:%S")
 
 
 def sanitize_url(url: str) -> str:
@@ -364,7 +433,12 @@ def extract_seat_label_from_embeds(message, seat_field_name_patterns: Sequence[s
     return None
 
 
-def extract_account_info_from_embeds(message, account_field_name_patterns: Sequence[str]) -> str:
+def extract_account_info_from_embeds(
+    message,
+    account_field_name_patterns: Sequence[str],
+    *,
+    mask_password: bool = True,
+) -> str:
     patterns = [_normalize_field(p) for p in account_field_name_patterns if p]
     embeds = getattr(message, "embeds", None) or []
     hits: List[str] = []
@@ -387,7 +461,7 @@ def extract_account_info_from_embeds(message, account_field_name_patterns: Seque
         m = re.search(r"(account|账号)\s*[:：]\s*([^\n\r]+)", hay, re.IGNORECASE)
         if m:
             hits.append(m.group(2).strip())
-    # 清理：去掉尾部常见标点（T-Splash 常见末尾有 '.'），并对密码做脱敏（只保留账号）
+    # 清理：去掉尾部常见标点（T-Splash 常见末尾有 '.'）；默认对密码做脱敏（只保留账号）
     cleaned: List[str] = []
     for x in hits:
         x = x.replace("||", "").strip()
@@ -398,17 +472,20 @@ def extract_account_info_from_embeds(message, account_field_name_patterns: Seque
         # - email:password
         # - email/password
         # - email password
-        m = re.match(r"^([^:\s/]+@[^:\s/]+)\s*[:/]\s*.+$", x)
-        if m:
-            cleaned.append(f"{m.group(1)}:****")
-        else:
-            # 若不是邮箱+密码结构，尝试只保留 ':' 或 '/' 前半段
-            if ":" in x:
-                cleaned.append(x.split(":", 1)[0].strip())
-            elif "/" in x:
-                cleaned.append(x.split("/", 1)[0].strip())
+        if mask_password:
+            m = re.match(r"^([^:\s/]+@[^:\s/]+)\s*[:/]\s*.+$", x)
+            if m:
+                cleaned.append(f"{m.group(1)}:****")
             else:
-                cleaned.append(x)
+                # 若不是邮箱+密码结构，尝试只保留 ':' 或 '/' 前半段
+                if ":" in x:
+                    cleaned.append(x.split(":", 1)[0].strip())
+                elif "/" in x:
+                    cleaned.append(x.split("/", 1)[0].strip())
+                else:
+                    cleaned.append(x)
+        else:
+            cleaned.append(x)
     return " | ".join(cleaned)[:300]
 
 
@@ -555,6 +632,39 @@ def extract_wechat_qr_entries(
     - account_info
     - items: [(qr_url, message_link, captured_at, expires_at, meta), ...]
     """
+    # ===== ThaiTicketMajor / 支付宝（二维码以 base64 形式提供）=====
+    raw = message_text_raw(message)
+    ttm = _extract_ttm_payload_from_text(raw)
+    if ttm.get("alipay_url") and ttm.get("qr_png_base64"):
+        seat_label = extract_seat_label_from_embeds(message, seat_field_name_patterns) or "TTM"
+        account_info = extract_account_info_from_embeds(message, account_field_name_patterns)
+        link = make_message_link(message)
+        now = time.time()
+        expires_at = now + 600.0
+        payment_expiry_cn = ""
+        exp_th = (ttm.get("payment_expiry") or "").strip()
+        if exp_th:
+            try:
+                expires_at, payment_expiry_cn = _parse_ttm_expiry_th_to_cn_epoch(exp_th)
+            except Exception:
+                pass
+        order_id = (ttm.get("order_id") or "").strip()
+        if order_id:
+            seat_key = f"{order_id} {seat_label}".strip()
+        else:
+            seat_key = choose_seat_key(seat_label)
+        meta = {
+            "source": "ttm_alipay",
+            "alipay_url": ttm.get("alipay_url") or "",
+            "product_title": ttm.get("product_title") or "",
+            "order_id": order_id,
+            "payment_expiry_th": exp_th,
+            "payment_expiry_cn": payment_expiry_cn,
+            "qr_png_base64": ttm.get("qr_png_base64") or "",
+        }
+        items = [("ttm", link, now, float(expires_at), meta)]
+        return seat_key, seat_label, account_info, items
+
     # ===== Spider 分支（不与 T-Splash 混淆；二维码在字段里）=====
     spider_qr = _extract_spider_qr_url_from_embeds(message)
     if spider_qr:

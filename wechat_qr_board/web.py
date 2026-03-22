@@ -34,10 +34,17 @@ def create_app(store: Store) -> web.Application:
         next_key = store.scan_next(seat_key)
         return web.json_response({"ok": True, "next_seat_key": next_key})
 
+    async def api_ttm_jump(request: web.Request) -> web.Response:
+        body: Dict[str, Any] = await request.json()
+        seat_key = str(body.get("seat_key") or "").strip()
+        out = store.log_ttm_jump(seat_key)
+        return web.json_response(out)
+
     app.router.add_get("/", handle_index)
     app.router.add_get("/static/{name}", handle_static)
     app.router.add_get("/api/state", api_state)
     app.router.add_post("/api/scan_next", api_scan_next)
+    app.router.add_post("/api/ttm_jump", api_ttm_jump)
     async def api_csv(_: web.Request) -> web.StreamResponse:
         store.ensure_csv_exists()
         resp = web.FileResponse(store.csv_path)
@@ -46,6 +53,14 @@ def create_app(store: Store) -> web.Application:
         return resp
 
     app.router.add_get("/api/csv", api_csv)
+    async def api_ttm_csv(_: web.Request) -> web.StreamResponse:
+        store.ensure_ttm_csv_exists()
+        resp = web.FileResponse(store.ttm_csv_path)
+        resp.content_type = "text/csv"
+        resp.headers["Content-Disposition"] = 'attachment; filename="ttm_orders.csv"'
+        return resp
+
+    app.router.add_get("/api/ttm_csv", api_ttm_csv)
     return app
 
 
