@@ -47,9 +47,9 @@ export DISCORD_TOKEN="你的token"
 
 sudo bash scripts/install_debian.sh \
   --domain itpdash.online \
-  --channel-ids "1374797975452127332,1381707134164668526" \
+  --channel-ids "频道id_1,频道id_2" \
   --app-dir /root/dc_cart_site \
-  --reset-password "CHANGE_ME"
+  --reset-password "password"
 ```
 
 脚本会：
