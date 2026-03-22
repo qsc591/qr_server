@@ -107,6 +107,12 @@ body {
   gap: 12px;
 }
 
+@media (max-width: 860px) {
+  .kind-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .kind-btn {
   border: 1px solid var(--border);
   background: rgba(231, 238, 252, 0.06);
@@ -129,6 +135,17 @@ body {
 .kind-btn img {
   width: 64px;
   height: 64px;
+  object-fit: contain;
+}
+
+/* ThaiTicketMajor logo is wide */
+#pickTtm {
+  grid-template-columns: 140px 1fr;
+}
+
+#pickTtm img {
+  width: 140px;
+  height: 48px;
 }
 
 .kind-name {
@@ -242,6 +259,12 @@ body {
 .gicon img {
   width: 38px;
   height: 38px;
+  object-fit: contain;
+}
+
+.gicon img.ttm-logo {
+  width: 78px;
+  height: 28px;
 }
 
 .gname {

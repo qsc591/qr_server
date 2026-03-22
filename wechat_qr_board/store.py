@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import json
 import os
+import hashlib
 import threading
 import time
 from typing import Any, Dict, List, Optional, Tuple
@@ -20,10 +21,12 @@ class Store:
         os.makedirs(self.data_dir, exist_ok=True)
         self.state_path = os.path.join(self.data_dir, "state.json")
         self.csv_path = os.path.join(self.data_dir, "scan_log.csv")
+        self.ttm_csv_path = os.path.join(self.data_dir, "ttm_orders.csv")
         self._lock = threading.Lock()
 
         self.seats: Dict[str, SeatState] = {}
         self._seen_item_keys: set[str] = set()
+        self._seen_ttm_jump_keys: set[str] = set()
 
     def preload_seats(self, seat_labels: List[str]) -> None:
         with self._lock:
@@ -178,5 +181,106 @@ class Store:
         with open(self.csv_path, "w", newline="", encoding="utf-8-sig") as f:
             w = csv.writer(f)
             w.writerow(["时间", "位置", "discord消息链接"])
+
+    def _append_ttm_csv(self, row: Tuple[str, str, str, str]) -> None:
+        file_exists = os.path.exists(self.ttm_csv_path)
+        with open(self.ttm_csv_path, "a", newline="", encoding="utf-8-sig") as f:
+            w = csv.writer(f)
+            if not file_exists:
+                w.writerow(["时间", "位置", "订单号", "账号密码"])
+            w.writerow(list(row))
+
+    def ensure_ttm_csv_exists(self) -> None:
+        file_exists = os.path.exists(self.ttm_csv_path)
+        if file_exists:
+            return
+        with open(self.ttm_csv_path, "w", newline="", encoding="utf-8-sig") as f:
+            w = csv.writer(f)
+            w.writerow(["时间", "位置", "订单号", "账号密码"])
+
+    def log_ttm_jump(self, seat_key: str) -> Dict[str, Any]:
+        """
+        TTM：点击“跳转到支付宝”后记录订单到 ttm_orders.csv，并在 meta 里打标记（持久化）。
+        CSV 字段：时间、位置、订单号、账号密码
+        """
+        seat_key = (seat_key or "").strip()
+        if not seat_key:
+            return {"ok": False, "error": "missing seat_key"}
+
+        row: Tuple[str, str, str, str] | None = None
+        dedup = False
+        with self._lock:
+            seat = self.seats.get(seat_key)
+            if not seat:
+                return {"ok": False, "error": "seat not found"}
+            item = seat.current()
+            if not item:
+                return {"ok": False, "error": "no current item"}
+            meta = item.meta or {}
+            source = str(meta.get("source") or "")
+            if source not in ("ttm_alipay", "ttm_export"):
+                return {"ok": False, "error": "not ttm"}
+
+            order_id = str(meta.get("order_id") or "").strip()
+            seat_label = seat.seat_label or seat.seat_key
+            account = seat.account_info or ""
+            jump_key = f"{seat_key}||{item.captured_at}||{order_id}||{account}"
+            if meta.get("jump_logged_at") or (jump_key in self._seen_ttm_jump_keys):
+                dedup = True
+            else:
+                self._seen_ttm_jump_keys.add(jump_key)
+                now = time.time()
+                meta["jumped_at"] = now
+                meta["jump_logged_at"] = now
+                item.meta = meta
+                row = (
+                    time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(now)),
+                    seat_label,
+                    order_id,
+                    account,
+                )
+
+        if row and not dedup:
+            self._append_ttm_csv(row)
+            self.save_state()
+        return {"ok": True, "dedup": dedup}
+
+    def save_png_bytes(self, png_bytes: bytes) -> str:
+        """
+        保存 PNG 到 data_dir/qr/<sha1>.png，返回文件名（不包含路径）。
+        用内容哈希去重，避免同一张图重复落盘。
+        """
+        if not png_bytes:
+            raise ValueError("empty png bytes")
+        qr_dir = os.path.join(self.data_dir, "qr")
+        os.makedirs(qr_dir, exist_ok=True)
+        h = hashlib.sha1(png_bytes).hexdigest()
+        name = f"{h}.png"
+        path = os.path.join(qr_dir, name)
+        if not os.path.exists(path):
+            tmp = path + ".tmp"
+            with open(tmp, "wb") as f:
+                f.write(png_bytes)
+            os.replace(tmp, path)
+        return name
+
+    def save_png_base64(self, b64: str) -> str:
+        """
+        解析 base64（不含 data: 前缀），保存为 PNG 文件，返回文件名。
+        """
+        import base64
+
+        s = (b64 or "").strip()
+        if not s:
+            raise ValueError("empty base64")
+        # 容错：如果是 data URI，剥离前缀
+        if s.startswith("data:"):
+            if "base64," in s:
+                s = s.split("base64,", 1)[1].strip()
+        try:
+            png = base64.b64decode(s, validate=False)
+        except Exception as e:
+            raise ValueError("bad base64") from e
+        return self.save_png_bytes(png)
 
 

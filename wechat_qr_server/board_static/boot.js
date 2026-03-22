@@ -68,9 +68,15 @@ function setupServerOnlyUi(gid) {
     header.appendChild(actions);
   }
 
-  // 2) 删除 board 内部的 CSV 按钮（已挪到顶栏）
+  // 2) 删除 board 内部的下载按钮（已挪到顶栏）
   const csvBtn = document.querySelector('a[href="/api/csv"]');
   if (csvBtn) csvBtn.remove();
+  const ttmCsvBtn = document.querySelector('a[href="/api/ttm_csv"]');
+  if (ttmCsvBtn) ttmCsvBtn.remove();
+  const byIdCsv = document.getElementById("btnDownloadCsv");
+  if (byIdCsv) byIdCsv.remove();
+  const byIdTtm = document.getElementById("btnDownloadTtmCsv");
+  if (byIdTtm) byIdTtm.remove();
 
   // 3) server-only 样式覆盖：二维码区更紧凑、Next 按钮一整行更醒目
   injectCssText(`
@@ -127,6 +133,15 @@ function setupServerOnlyUi(gid) {
       font-size:16px;
       border-radius:14px;
     }
+    #btnAlipayJump{
+      display:block;
+      width:100%;
+      min-width:0;
+      margin-top:10px;
+      padding:12px 16px;
+      font-weight:900;
+      border-radius:14px;
+    }
   `);
 
   // 4) 兜底：直接设置 inline，确保“整行/无 CSV”一定生效
@@ -162,12 +177,19 @@ async function main() {
   let js = await loadText("/board_static/app.js");
   js = js.replaceAll('"/api/state"', `"/api/groups/${gid}/state"`);
   js = js.replaceAll('"/api/scan_next"', `"/api/groups/${gid}/scan_next"`);
+  js = js.replaceAll('"/api/ttm_jump"', `"/api/groups/${gid}/ttm_jump"`);
   const run = new Function(js);
   run();
 
   // app.js 执行后再兜底移除一次 CSV（防止 DOM 变化导致未删除）
   const csvBtn2 = document.querySelector('a[href="/api/csv"]');
   if (csvBtn2) csvBtn2.remove();
+  const ttmCsvBtn2 = document.querySelector('a[href="/api/ttm_csv"]');
+  if (ttmCsvBtn2) ttmCsvBtn2.remove();
+  const byIdCsv2 = document.getElementById("btnDownloadCsv");
+  if (byIdCsv2) byIdCsv2.remove();
+  const byIdTtm2 = document.getElementById("btnDownloadTtmCsv");
+  if (byIdTtm2) byIdTtm2.remove();
 }
 
 main();

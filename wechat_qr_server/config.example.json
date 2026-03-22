@@ -7,6 +7,7 @@
   "keywords": ["payment exported", "wechat"],
   "kakao_group_enabled": true,
   "countdown_seconds": 415,
+  "pgw_client_id": "6940c10b-6860-4233-be3e-b935c44d9fbb",
   "seat_field_name_patterns": ["seat info", "seat", "位置", "座位"],
   "account_field_name_patterns": ["account", "账号", "login", "id", "password", "pass"],
   "web": {
@@ -15,7 +16,7 @@
     "public_base_url": ""
   },
   "reset_password": "CHANGE_ME",
-  "data_dir": "wechat_qr_server/data"
+  "data_dir": "data"
 }
 
 

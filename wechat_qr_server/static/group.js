@@ -26,6 +26,16 @@ async function main() {
   const info = await fetchGroupInfo(groupId);
   document.getElementById("groupName").textContent = info.name || groupId;
   document.getElementById("groupId").textContent = groupId;
+  const pgwWrap = document.getElementById("pgwMeta");
+  const pgwName = (info.pgw_name || "").trim();
+  const pgwEmail = (info.pgw_email || "").trim();
+  if (pgwWrap && (pgwName || pgwEmail)) {
+    pgwWrap.style.display = "block";
+    const n = document.getElementById("pgwName");
+    const e = document.getElementById("pgwEmail");
+    if (n) n.textContent = pgwName || "-";
+    if (e) e.textContent = pgwEmail || "-";
+  }
 
   const frame = document.getElementById("boardFrame");
   frame.src = `/board?group_id=${encodeURIComponent(groupId)}`;
@@ -42,7 +52,14 @@ async function main() {
 
   const csvBtn = document.getElementById("csvLink");
   if (csvBtn) {
-    csvBtn.href = `/api/groups/${encodeURIComponent(groupId)}/csv`;
+    const kind = String(info.kind || "").toLowerCase();
+    if (kind === "ttm_alipay") {
+      csvBtn.href = `/api/groups/${encodeURIComponent(groupId)}/ttm_csv`;
+      csvBtn.textContent = "下载TTM订单CSV";
+    } else {
+      csvBtn.href = `/api/groups/${encodeURIComponent(groupId)}/csv`;
+      csvBtn.textContent = "下载CSV";
+    }
   }
 }
 

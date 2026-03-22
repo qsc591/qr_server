@@ -14,11 +14,18 @@ async function doReset(password) {
   return resp;
 }
 
-async function createGroup({ name, kind, password }) {
+async function createGroup({ name, kind, password, pgwEmail, pgwName, ttmCaptureQr }) {
   const resp = await fetch("/api/groups", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, kind, password })
+    body: JSON.stringify({
+      name,
+      kind,
+      password,
+      pgw_email: pgwEmail || "",
+      pgw_name: pgwName || "",
+      ttm_capture_qr: (kind || "").toLowerCase() === "ttm_alipay" ? !!ttmCaptureQr : true
+    })
   });
   if (!resp.ok) {
     const txt = await resp.text();
@@ -57,7 +64,9 @@ function renderGroups(data) {
     row.className = "group-row";
     const left = document.createElement("div");
     const tags = [];
-    if ((g.kind || "") === "kakao") tags.push("KAKAO");
+    const kind0 = (g.kind || "wechat").toLowerCase();
+    if (kind0 === "kakao") tags.push("KAKAO");
+    else if (kind0 === "ttm_alipay") tags.push("TTM");
     else tags.push("WECHAT");
     if (g.locked) tags.push("LOCK");
     const tagHtml = tags.length ? `<div class="gtags">${tags.map((t) => `<span class="tag">${t}</span>`).join("")}</div>` : "";
@@ -71,9 +80,10 @@ function renderGroups(data) {
     const icon = document.createElement("div");
     icon.className = "gicon";
     const img = document.createElement("img");
-    const kind = (g.kind || "wechat").toLowerCase();
-    img.src = kind === "kakao" ? "/static/icon_kakao.svg" : "/static/icon_wechat.svg";
-    img.alt = kind === "kakao" ? "Kakao" : "WeChat";
+    const kind = kind0;
+    img.src = kind === "kakao" ? "/static/icon_kakao.svg" : (kind === "ttm_alipay" ? "/static/icon_ttm.png" : "/static/icon_wechat.svg");
+    img.alt = kind === "kakao" ? "Kakao" : (kind === "ttm_alipay" ? "ThaiTicketMajor" : "WeChat");
+    if (kind === "ttm_alipay") img.className = "ttm-logo";
     icon.appendChild(img);
 
     const actions = document.createElement("div");
@@ -151,19 +161,29 @@ function openKindModal() {
   const modal = document.getElementById("kindModal");
   if (modal) modal.style.display = "flex";
   const wrap = document.getElementById("kakaoPwWrap");
+  const ttmWrap = document.getElementById("ttmPgwWrap");
   const actionsDefault = document.getElementById("modalActionsDefault");
   if (wrap) wrap.style.display = "none";
+  if (ttmWrap) ttmWrap.style.display = "none";
   if (actionsDefault) actionsDefault.style.display = "flex";
   const pw = document.getElementById("kakaoPassword");
   if (pw) pw.value = "";
+  const te = document.getElementById("ttmPgwEmail");
+  const tn = document.getElementById("ttmPgwName");
+  if (te) te.value = "";
+  if (tn) tn.value = "";
+  const tc = document.getElementById("ttmCaptureQr");
+  if (tc) tc.checked = true;
 }
 
 function closeKindModal() {
   const modal = document.getElementById("kindModal");
   if (modal) modal.style.display = "none";
   const wrap = document.getElementById("kakaoPwWrap");
+  const ttmWrap = document.getElementById("ttmPgwWrap");
   const actionsDefault = document.getElementById("modalActionsDefault");
   if (wrap) wrap.style.display = "none";
+  if (ttmWrap) ttmWrap.style.display = "none";
   if (actionsDefault) actionsDefault.style.display = "flex";
 }
 
@@ -210,12 +230,19 @@ document.getElementById("btnReset").addEventListener("click", async () => {
 function setupModalHandlers() {
   const pickWechat = document.getElementById("pickWechat");
   const pickKakao = document.getElementById("pickKakao");
+  const pickTtm = document.getElementById("pickTtm");
   const wrap = document.getElementById("kakaoPwWrap");
+  const ttmWrap = document.getElementById("ttmPgwWrap");
   const actionsDefault = document.getElementById("modalActionsDefault");
   const btnClose = document.getElementById("btnClose");
   const btnCancel = document.getElementById("btnCancel");
   const btnCreateKakao = document.getElementById("btnCreateKakao");
   const pw = document.getElementById("kakaoPassword");
+  const ttmEmail = document.getElementById("ttmPgwEmail");
+  const ttmName = document.getElementById("ttmPgwName");
+  const ttmCaptureQr = document.getElementById("ttmCaptureQr");
+  const btnCancelTtm = document.getElementById("btnCancelTtm");
+  const btnCreateTtm = document.getElementById("btnCreateTtm");
   const mask = document.querySelector("#kindModal .modal-mask");
 
   function getName() {
@@ -224,13 +251,20 @@ function setupModalHandlers() {
 
   if (btnClose) btnClose.addEventListener("click", closeKindModal);
   if (btnCancel) btnCancel.addEventListener("click", closeKindModal);
+  if (btnCancelTtm) btnCancelTtm.addEventListener("click", closeKindModal);
   if (mask) mask.addEventListener("click", closeKindModal);
 
   if (pickWechat) {
     pickWechat.addEventListener("click", async () => {
       const name = getName();
       try {
-        const data = await createGroup({ name, kind: "wechat", password: "" });
+        const data = await createGroup({
+          name,
+          kind: "wechat",
+          password: "",
+          pgwEmail: "",
+          pgwName: ""
+        });
         if (data && data.group_id) window.location.href = `/g/${data.group_id}`;
       } catch (e) {
         window.alert(String(e && e.message ? e.message : e));
@@ -238,12 +272,41 @@ function setupModalHandlers() {
     });
   }
 
+  if (pickTtm) {
+    pickTtm.addEventListener("click", () => {
+      if (ttmWrap) ttmWrap.style.display = "block";
+      if (actionsDefault) actionsDefault.style.display = "none";
+      if (ttmEmail) ttmEmail.focus();
+    });
+  }
+
   if (pickKakao) {
     pickKakao.addEventListener("click", () => {
       if (wrap) wrap.style.display = "block";
+      if (ttmWrap) ttmWrap.style.display = "none";
       if (actionsDefault) actionsDefault.style.display = "none";
       if (pw) pw.focus();
     });
+  }
+
+  async function doCreateTtm() {
+    const name = getName();
+    const email = (ttmEmail?.value || "").trim();
+    const nm = (ttmName?.value || "").trim();
+    const cap = !!(ttmCaptureQr && ttmCaptureQr.checked);
+    try {
+      const data = await createGroup({
+        name: name || "ThaiTicketMajor (支付宝)",
+        kind: "ttm_alipay",
+        password: "",
+        pgwEmail: email,
+        pgwName: nm,
+        ttmCaptureQr: cap
+      });
+      if (data && data.group_id) window.location.href = `/g/${data.group_id}`;
+    } catch (e) {
+      window.alert(String(e && e.message ? e.message : e));
+    }
   }
 
   async function doCreateKakao() {
@@ -270,6 +333,13 @@ function setupModalHandlers() {
     } catch (e) {
       window.alert(String(e && e.message ? e.message : e));
     }
+  }
+
+  if (btnCreateTtm) btnCreateTtm.addEventListener("click", doCreateTtm);
+  if (ttmName) {
+    ttmName.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") doCreateTtm();
+    });
   }
 
   if (btnCreateKakao) btnCreateKakao.addEventListener("click", doCreateKakao);
