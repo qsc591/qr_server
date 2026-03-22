@@ -5,22 +5,24 @@
 ```
 cd /root/dc_cart_site
 
-# 1) 停服务
+# 0) 先停服务（避免边跑边改）
 sudo systemctl stop wechat-qr-server
 
-# 2) 拉新分支代码
-sudo apt update && sudo apt install -y git
+# 1) 把所有本地修改 + 未跟踪文件一起打包保存
+git stash push -u -m "pre-ttm-upgrade $(date +%F_%T)"
+
+# 2) 切到你的新分支并更新
 git fetch origin
 git checkout ttm_tsp || git checkout -b ttm_tsp origin/ttm_tsp
-git pull
+git pull --ff-only
 
-# 3) 重新装依赖（用新 requirements.txt）
+# 3) 重新装依赖（按新 requirements.txt）
 source .venv/bin/activate
 pip install -U pip
 pip install -r requirements.txt
 deactivate
 
-# 4) 重启服务
+# 4) 启动服务
 sudo systemctl restart wechat-qr-server
 sudo systemctl status wechat-qr-server --no-pager -l
 ```
