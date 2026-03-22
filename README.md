@@ -1,5 +1,41 @@
 # WeChat QR Server (GitHub clean)
 
+
+旧版本更新 方法
+```
+cd /root/dc_cart_site
+
+# 1) 停服务
+sudo systemctl stop wechat-qr-server
+
+# 2) 拉新分支代码
+sudo apt update && sudo apt install -y git
+git fetch origin
+git checkout ttm_tsp || git checkout -b ttm_tsp origin/ttm_tsp
+git pull
+
+# 3) 重新装依赖（用新 requirements.txt）
+source .venv/bin/activate
+pip install -U pip
+pip install -r requirements.txt
+deactivate
+
+# 4) 重启服务
+sudo systemctl restart wechat-qr-server
+sudo systemctl status wechat-qr-server --no-pager -l
+```
+
+
+
+
+
+
+
+
+
+
+
+
 这个目录是从主工程里抽出来的 **纯净可上传 GitHub** 版本，只保留运行所需的三部分：
 
 - `wechat_qr_server/`：Discord 监听 + 分组管理 + Web UI（包含 TTM/Alipay 支持）
