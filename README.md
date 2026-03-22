@@ -17,10 +17,11 @@ git checkout ttm_tsp || git checkout -b ttm_tsp origin/ttm_tsp
 git pull --ff-only
 
 # 3) 重新装依赖（按新 requirements.txt）
-source .venv/bin/activate
-pip install -U pip
-pip install -r requirements.txt
-deactivate
+sudo apt update
+sudo apt install -y python3-pip
+
+pip install --break-system-packages -U pip
+pip install --break-system-packages -r requirements.txt
 
 # 4) 启动服务
 sudo systemctl restart wechat-qr-server
