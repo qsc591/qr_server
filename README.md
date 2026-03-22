@@ -1,4 +1,4 @@
-# SenRaffle – WeChat QR Server (GitHub clean)
+# WeChat QR Server (GitHub clean)
 
 这个目录是从主工程里抽出来的 **纯净可上传 GitHub** 版本，只保留运行所需的三部分：
 
