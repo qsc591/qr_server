@@ -6,9 +6,9 @@ set -euo pipefail
 #
 # Usage:
 #   sudo bash scripts/install_debian.sh \
-#     --domain itpdash.online \
-#     --channel-ids "1374797975452127332,1381707134164668526" \
-#     --app-dir /root/dc_cart_site \
+#     --domain <your-domain> \
+#     --channel-ids "<id1,id2,...>" \
+#     --app-dir /root/github_qr_site \
 #     --reset-password "CHANGE_ME"
 #
 # Token is read from env DISCORD_TOKEN (recommended) or prompted interactively.
@@ -21,6 +21,7 @@ PORT="17889"
 PUBLIC_BASE_URL=""
 RESET_PASSWORD=""
 ACME_EMAIL=""
+USE_USER_TOKEN="false"
 
 usage() {
   cat <<'EOF'
@@ -36,6 +37,7 @@ Optional:
   --public-base-url <url>            default: https://<domain>
   --reset-password <password>        default: (random generated)
   --acme-email <email>               optional: ACME account email for Caddy
+  --use-user-token <true|false>      default: false (Bot Token -> false; User Token -> true)
 
 Environment:
   DISCORD_TOKEN                      required unless you want an interactive prompt
@@ -43,10 +45,11 @@ Environment:
 Example:
   export DISCORD_TOKEN="xxxxx"
   sudo bash scripts/install_debian.sh \
-    --domain itpdash.online \
-    --channel-ids "1374797975452127332,1381707134164668526" \
-    --app-dir /root/dc_cart_site \
-    --reset-password "CHANGE_ME"
+    --domain <your-domain> \
+    --channel-ids "<id1,id2,...>" \
+    --app-dir /root/github_qr_site \
+    --reset-password "CHANGE_ME" \
+    --use-user-token false
 EOF
 }
 
@@ -74,6 +77,7 @@ while [[ $# -gt 0 ]]; do
     --public-base-url) PUBLIC_BASE_URL="${2:-}"; shift 2;;
     --reset-password) RESET_PASSWORD="${2:-}"; shift 2;;
     --acme-email) ACME_EMAIL="${2:-}"; shift 2;;
+    --use-user-token) USE_USER_TOKEN="${2:-}"; shift 2;;
     -h|--help) usage; exit 0;;
     *) echo "Unknown arg: $1" >&2; usage; exit 1;;
   esac
@@ -134,7 +138,7 @@ fi
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -U pip
-pip install aiohttp "discord.py==1.7.3"
+pip install -r requirements.txt
 deactivate
 
 echo "[4/6] Writing wechat_qr_server/config.json..."
@@ -143,7 +147,7 @@ cat > wechat_qr_server/config.json <<EOF
 {
   "discord": {
     "token": "",
-    "use_user_token": true,
+    "use_user_token": ${USE_USER_TOKEN},
     "source_channel_ids": [${CHANNEL_IDS}]
   },
   "keywords": ["payment exported", "wechat"],
@@ -220,5 +224,8 @@ echo "Next steps:"
 echo "- Ensure DNS A records for ${DOMAIN} and www.${DOMAIN} both point to this server IP"
 echo "- Ensure firewall/security-group allows TCP 80/443"
 echo "- If HTTPS not ready yet, check: journalctl -u caddy -n 200 --no-pager"
+
+
+
 
 
