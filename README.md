@@ -1,5 +1,50 @@
 # SenRaffle – WeChat QR Server (GitHub clean)
 
+
+
+# 旧版本更新
+
+
+
+```
+cd /root/dc_cart_site
+
+# 1) 停服务
+sudo systemctl stop wechat-qr-server
+
+# 2) 保护本地配置（防止被覆盖）
+git update-index --skip-worktree wechat_qr_server/config.json 2>/dev/null || true
+
+# 3) 拉取并更新到 hkt_tsp
+git fetch origin
+git checkout hkt_tsp || git checkout -b hkt_tsp origin/hkt_tsp
+git pull --ff-only
+
+# 4) 启动
+sudo systemctl restart wechat-qr-server
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 这个目录是从主工程里抽出来的 **纯净可上传 GitHub** 版本，只保留运行所需的三部分：
 
 - `wechat_qr_server/`：Discord 监听 + 分组管理 + Web UI（包含 TTM/Alipay 支持）
