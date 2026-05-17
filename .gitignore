@@ -1,0 +1,30 @@
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+
+.venv/
+venv/
+.python-version
+
+# runtime data
+data/
+wechat_qr_server/data/
+wechat_qr_board/data/
+groups/
+wechat_qr_server/groups/
+
+# local configs / secrets
+wechat_qr_server/config.json
+wechat_qr_board/config.json
+login/.env
+.env
+
+# playwright / browsers (if installed locally)
+ms-playwright/
+
+# IDE / OS
+.idea/
+.vscode/
+*.log
+.DS_Store

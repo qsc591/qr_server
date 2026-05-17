@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WeChat QR Server</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <div class="landing">
+      <div class="panel">
+        <div class="h1">多人付款服务器</div>
+        <div class="p">
+          先创建一个分组（每个分组看到的二维码互不冲突）。把分组链接发给同组成员即可一起处理。
+        </div>
+        <form id="createForm" class="form">
+          <label class="label">分组名称</label>
+          <input class="input" id="groupName" placeholder="例如：A组 / 付款1组" />
+          <button class="btn primary" type="submit">创建分组</button>
+        </form>
+
+        <div class="reset-wrap">
+          <button class="btn danger" id="btnReset" type="button">初始化分组（清空所有分组）</button>
+          <div class="hint">需要输入重置密码；确认后会删除所有分组与分组数据。</div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="h2">已有分组</div>
+        <div id="groups" class="groups"></div>
+      </div>
+    </div>
+
+    <!-- 创建分组：二次确认（选择微信/Kakao） -->
+    <div id="kindModal" class="modal" style="display:none;">
+      <div class="modal-mask"></div>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-label="选择分组类型">
+        <div class="modal-title">选择分组类型</div>
+        <div class="modal-sub">微信组 / Kakao 组 / ThaiTicketMajor(支付宝) 各自轮询，互不影响。</div>
+        <div class="kind-grid">
+          <button class="kind-btn" id="pickWechat" type="button">
+            <img src="/static/icon_wechat.svg" alt="WeChat" />
+            <div class="kind-name">微信组</div>
+            <div class="kind-desc">接收 WeChat/Eximbay/Xbot</div>
+          </button>
+          <button class="kind-btn" id="pickKakao" type="button">
+            <img src="/static/icon_kakao.svg" alt="Kakao" />
+            <div class="kind-name">Kakao组</div>
+            <div class="kind-desc">仅接收 Kakao（使用重置密码）</div>
+          </button>
+          <button class="kind-btn" id="pickTtm" type="button">
+            <img src="/static/icon_ttm.png" alt="ThaiTicketMajor" />
+            <div class="kind-name">ThaiTicketMajor (支付宝)</div>
+            <div class="kind-desc">接收 ThaiTicketMajor export → 转换支付宝二维码</div>
+          </button>
+        </div>
+
+        <div id="kakaoPwWrap" style="display:none; margin-top: 12px;">
+          <label class="label">请输入重置分组密码（reset_password）</label>
+          <input class="input" id="kakaoPassword" type="password" placeholder="请输入重置密码" />
+          <div class="hint">Kakao 分组的登录密码将自动使用该重置密码。</div>
+          <div class="modal-actions">
+            <button class="btn" id="btnCancel" type="button">取消</button>
+            <button class="btn primary" id="btnCreateKakao" type="button">确认绑定 Kakao 组</button>
+          </div>
+        </div>
+
+        <div id="ttmPgwWrap" style="display:none; margin-top: 12px;">
+          <label class="label">PGW邮箱（可选）</label>
+          <input class="input" id="ttmPgwEmail" placeholder="例如：xxx@gmail.com" />
+          <label class="label" style="margin-top: 10px;">PGW姓名（可选）</label>
+          <input class="input" id="ttmPgwName" placeholder="例如：WENJI Z" />
+          <label class="label" style="margin-top: 10px;">读取支付宝二维码</label>
+          <div class="hint" style="margin-top: 6px;">
+            <label style="display:flex; gap:8px; align-items:center; cursor:pointer;">
+              <input id="ttmCaptureQr" type="checkbox" checked />
+              <span>开启：显示二维码；关闭：仅提供跳转链接（MPaymentProcess 链接）</span>
+            </label>
+          </div>
+          <div class="hint" style="margin-top: 8px;">
+            可留空：将以空值提交 PGW 信息，不影响其它流程。
+          </div>
+          <div class="modal-actions">
+            <button class="btn" id="btnCancelTtm" type="button">取消</button>
+            <button class="btn primary" id="btnCreateTtm" type="button">确认创建 ThaiTicketMajor 组</button>
+          </div>
+        </div>
+
+        <div class="modal-actions" id="modalActionsDefault">
+          <button class="btn" id="btnClose" type="button">关闭</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/static/index.js?v=20260322_1"></script>
+  </body>
+</html>
+
+
