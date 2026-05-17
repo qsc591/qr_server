@@ -17,6 +17,8 @@ wechat_qr_server/groups/
 # local configs / secrets
 wechat_qr_server/config.json
 wechat_qr_board/config.json
+github_qr_site_v2/wechat_qr_server/config.json
+github_qr_site_v2/wechat_qr_board/config.json
 login/.env
 .env
 

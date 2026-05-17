@@ -220,6 +220,10 @@ body {
   overflow-wrap: anywhere;
 }
 
+.value.preline{
+  white-space: pre-line;
+}
+
 .value#curSeat {
   font-size: 22px;
   font-weight: 800;
@@ -257,8 +261,11 @@ body {
 }
 
 .qr img.qr-large {
-  max-width: min(520px, 96%);
-  max-height: min(520px, 55vh);
+  width: min(300px, 96%);
+  height: auto;
+  max-width: min(300px, 96%);
+  max-height: min(300px, 55vh);
+  image-rendering: pixelated;
 }
 
 .qr img.switching {

@@ -125,6 +125,7 @@ body {
   grid-template-columns: 56px 1fr;
   gap: 12px;
   align-items: center;
+  justify-items: start;
 }
 
 .kind-btn:hover {
@@ -136,6 +137,18 @@ body {
   width: 64px;
   height: 64px;
   object-fit: contain;
+  justify-self: start;
+}
+
+.kind-btn .kind-name,
+.kind-btn .kind-desc{
+  grid-column: 2;
+  min-width: 0;
+  justify-self: start;
+}
+
+.kind-btn .kind-desc{
+  align-self: start;
 }
 
 /* ThaiTicketMajor logo is wide */
@@ -151,12 +164,46 @@ body {
 .kind-name {
   font-weight: 900;
   font-size: 18px;
+  text-align: left;
 }
 
 .kind-desc {
   margin-top: 4px;
   font-size: 14px;
   color: var(--muted);
+  text-align: left;
+}
+
+.kind-desc-3lines{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  align-items:flex-start;
+  width: 100%;
+}
+
+.kind-desc-3lines .kind-desc-line{
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  text-align:left;
+  width: 100%;
+}
+
+.kind-desc-2lines{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  align-items:flex-start;
+  width: 100%;
+}
+
+.kind-desc-2lines .kind-desc-line{
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  text-align:left;
+  width: 100%;
 }
 
 .modal-actions {

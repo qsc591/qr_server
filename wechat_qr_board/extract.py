@@ -699,14 +699,16 @@ def extract_wechat_qr_entries(
     ts_alipay_qr = _extract_tsplash_alipay_qr_url_from_embeds(message)
     if ts_alipay_qr:
         fields = _extract_tsplash_fields(message)
-        seat_label = extract_seat_label_from_embeds(message, seat_field_name_patterns) or "AliPay"
-        account_info = extract_account_info_from_embeds(message, account_field_name_patterns)
+        seat_info_raw = (fields.get("Seat Info") or "").strip()
+        account_info = extract_account_info_from_embeds(
+            message, account_field_name_patterns, mask_password=False
+        )
         link = make_message_link(message)
         now = time.time()
-        expires_at = now + float(countdown_seconds)
+        # HKT / T-Splash AliPay：二维码通常仅 5 分钟有效
+        expires_at = now + 300.0
 
         order_id = (fields.get("OrderId") or fields.get("OrderID") or fields.get("orderid") or "").replace("||", "").strip()
-        seat_key = f"{order_id} {seat_label}".strip() if order_id else choose_seat_key(seat_label)
 
         alipay_jump = ""
         embeds = getattr(message, "embeds", None) or []
@@ -722,6 +724,24 @@ def extract_wechat_qr_entries(
                 alipay_jump = u
                 break
 
+        lines = [ln.strip() for ln in seat_info_raw.splitlines() if ln.strip()]
+        show_time = lines[0] if len(lines) >= 1 else ""
+        rest = lines[1:] if len(lines) >= 2 else []
+
+        seat_lines = [ln for ln in rest if ("排" in ln or "号" in ln)]
+        if not seat_lines and rest:
+            seat_lines = rest[-2:] if len(rest) >= 2 else rest[-1:]
+
+        ticket_lines = [ln for ln in rest if ln not in seat_lines]
+        ticket = ticket_lines[0] if ticket_lines else ""
+        if ticket and ticket_lines.count(ticket) > 1:
+            ticket = ticket_lines[0]
+
+        seat_detail = "\n".join(seat_lines).strip()
+
+        seat_label_fallback = (f"{show_time} {seat_lines[0]}".strip() if (show_time and seat_lines) else (show_time or (seat_lines[0] if seat_lines else "AliPay")))
+        seat_label = extract_seat_label_from_embeds(message, seat_field_name_patterns) or seat_label_fallback
+        seat_key = f"{order_id} {seat_label}".strip() if order_id else choose_seat_key(seat_label)
         meta = {
             "source": "alipay_tsplash",
             "alipay_url": alipay_jump,
@@ -729,7 +749,10 @@ def extract_wechat_qr_entries(
             "site": (fields.get("Site") or "").strip(),
             "event_id": (fields.get("Event ID") or "").strip(),
             "quantity": (fields.get("Quantity") or "").strip(),
-            "seat_info": (fields.get("Seat Info") or "").strip(),
+            "date": show_time,
+            "seat_detail": seat_detail,
+            "price": ticket,
+            "seat_info": seat_info_raw,
             "paymethod": "AliPay",
             "qr_large": True,
         }

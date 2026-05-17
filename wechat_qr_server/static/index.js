@@ -67,7 +67,7 @@ function renderGroups(data) {
     const kind0 = (g.kind || "wechat").toLowerCase();
     if (kind0 === "kakao") tags.push("KAKAO");
     else if (kind0 === "ttm_alipay") tags.push("TTM");
-    else tags.push("WECHAT");
+    else tags.push("MIX");
     if (g.locked) tags.push("LOCK");
     const tagHtml = tags.length ? `<div class="gtags">${tags.map((t) => `<span class="tag">${t}</span>`).join("")}</div>` : "";
     const st = g.stats || {};

@@ -190,7 +190,7 @@ function render(state) {
   }
   const meta = (shown && shown.meta) ? shown.meta : {};
   const source = meta && meta.source ? String(meta.source) : "";
-  const isXbot = source === "xbot" || source === "spider";
+  const isXbot = source === "xbot" || source === "spider" || source === "alipay_tsplash";
   const isTtm = source === "ttm_alipay" || source === "ttm_export";
   const isAliPayImg = source === "alipay_tsplash";
   if (xbotDetailsEl) xbotDetailsEl.style.display = isXbot ? "block" : "none";
@@ -198,12 +198,18 @@ function render(state) {
 
   if (isXbot) {
     if (curDateEl) curDateEl.textContent = meta.date || "-";
-    if (curSeatDetailEl) curSeatDetailEl.textContent = meta.seat_detail || "-";
+    if (curSeatDetailEl) {
+      const seatTxt = meta.seat_detail || "-";
+      curSeatDetailEl.textContent = seatTxt;
+      if (source === "alipay_tsplash") curSeatDetailEl.classList.add("preline");
+      else curSeatDetailEl.classList.remove("preline");
+    }
     if (curPriceEl) curPriceEl.textContent = meta.price ? String(meta.price) : "-";
     if (curQtyEl) curQtyEl.textContent = meta.quantity ? String(meta.quantity) : "-";
   } else {
     if (curDateEl) curDateEl.textContent = "-";
     if (curSeatDetailEl) curSeatDetailEl.textContent = "-";
+    if (curSeatDetailEl) curSeatDetailEl.classList.remove("preline");
     if (curPriceEl) curPriceEl.textContent = "-";
     if (curQtyEl) curQtyEl.textContent = "-";
   }
