@@ -119,6 +119,20 @@ function setupServerOnlyUi(gid) {
       width:auto;
       max-width:100%;
     }
+    /* 手机窄屏：不再定死高度，让内容自适应；QR 收窄 */
+    @media (max-width: 640px) {
+      .right{ padding:8px; }
+      .card{ height:auto; max-height:none; padding:10px; gap:10px; }
+      .qr{ min-height:0; padding:8px; }
+      .qr img{ max-height:260px; }
+      #btnBack{ padding:6px 8px; }
+      #btnBack img{ width:26px; height:26px; }
+    }
+    /* iPad 中屏：轻收 */
+    @media (min-width: 641px) and (max-width: 1024px) {
+      .card{ height:calc(100vh - 20px); padding:12px; }
+      .qr{ min-height:200px; }
+    }
     .actions{
       display:block;
       width:100%;

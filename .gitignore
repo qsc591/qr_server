@@ -30,3 +30,4 @@ ms-playwright/
 .vscode/
 *.log
 .DS_Store
+run_preview.py

@@ -393,6 +393,115 @@ a:hover {
   }
 }
 
+/* ===== iPad（641-1024）：保持左右布局，收窄左栏 ===== */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .app {
+    grid-template-columns: 260px 1fr;
+  }
+  .left-header {
+    padding: 12px 12px 10px;
+  }
+  .seat-list {
+    padding: 8px;
+  }
+  .seat-item {
+    padding: 8px;
+  }
+}
+
+/* ===== 手机（≤640）：上下布局，座位列表横向可滚 ===== */
+@media (max-width: 640px) {
+  html, body { -webkit-text-size-adjust: 100%; }
+  .app {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  .left {
+    flex: 0 0 auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    max-width: 100%;
+  }
+  .left-header {
+    padding: 8px 12px 6px;
+    border-bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .title { font-size: 14px; }
+  .subtitle { margin-top: 0; font-size: 12px; }
+
+  /* 座位列表横向：胶囊左右滑 */
+  .seat-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding: 8px 10px 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    overscroll-behavior-x: contain;
+  }
+  /* 手机上分组标题一律隐藏（已扫描/已过期默认折叠，只出未扫描胶囊） */
+  .group-head { display: none; }
+
+  .seat-item {
+    flex: 0 0 auto;
+    width: 180px;
+    margin: 0;
+    padding: 8px 10px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4px;
+    scroll-snap-align: start;
+  }
+  /* 胶囊里简化：座位名 + 序号/倒计时；隐藏 pill 和右下数字 */
+  .seat-item .seat-status { display: none; }
+  .seat-item > div:nth-child(4) { display: none; }
+  .seat-line-1 { font-size: 13px; }
+  .seat-line-2 { font-size: 12px; margin-top: 2px; }
+  .seq-badge { min-width: 26px; height: 20px; font-size: 11px; }
+  .seat-timer { font-size: 11px; }
+
+  /* 右侧扫码卡片：全屏、无外边距 */
+  .right {
+    padding: 8px;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  .card {
+    height: auto;
+    max-height: none;
+    padding: 10px;
+    gap: 10px;
+    border-radius: 12px;
+  }
+
+  /* KB Pay 卡片手机版 */
+  #kbpayCard .kb-head { gap: 6px; }
+  #kbpayCard .kb-title { font-size: 13px; }
+  #kbpayCard .site-chip { font-size: 11px; padding: 3px 8px; }
+  #kbpayCard .code-big { font-size: 34px; letter-spacing: 0.08em; }
+  #kbpayCard .qr-box img { max-width: 190px; }
+  #kbpayCard .expiry .cd { font-size: 22px; }
+  #kbpayCard .kb-mval { font-size: 15px; }
+  #kbpayCard .kb-steps-body { font-size: 13px; }
+
+  /* 通用值字号收缩 */
+  .value#curSeat { font-size: 16px; }
+  .qr img.qr-large { max-width: 220px; }
+
+  /* 按钮更宽、更好点 */
+  .actions .btn,
+  .btn { min-width: 0; }
+  .btn { padding: 12px 14px; font-size: 15px; }
+}
+
 /* ===== 子分组标题（未扫描 / 已扫描） ===== */
 .group-head {
   display: flex;
@@ -701,6 +810,32 @@ a:hover {
 /* KB Pay 明细行较多时允许卡片内部滚动，避免二维码被挤压 */
 .card {
   overflow-y: auto;
+}
+
+/* ===== 手机端最终覆盖（放最尾，保证不被后写的基础规则覆盖） ===== */
+@media (max-width: 640px) {
+  .group-head { display: none; }
+  .seat-item .seat-status { display: none; }
+  .seat-item > div:nth-child(4) { display: none; }
+  .seat-item {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 180px;
+    padding: 8px 10px;
+    margin: 0;
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+  }
+  .seat-line-1 { font-size: 13px; }
+  .seat-line-2 { font-size: 12px; margin-top: 2px; }
+  #kbpayCard .code-big { font-size: 34px; letter-spacing: 0.08em; }
+  #kbpayCard .qr-box img { max-width: 190px; }
+  #kbpayCard .expiry .cd { font-size: 22px; }
+  #kbpayCard .kb-mval { font-size: 15px; }
+  .card {
+    height: auto;
+    max-height: none;
+  }
 }
 
 

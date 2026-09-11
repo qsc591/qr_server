@@ -355,4 +355,57 @@ body {
   color: var(--muted);
 }
 
+/* ===== 手机（≤640）适配 ===== */
+@media (max-width: 640px) {
+  html, body { -webkit-text-size-adjust: 100%; }
+  .landing { padding: 10px; }
+  .panel { padding: 14px; border-radius: 14px; }
+  .h1 { font-size: 20px; }
+  .h2 { font-size: 16px; margin-top: 10px; }
+  .p { font-size: 14px; }
+  .input { font-size: 15px; padding: 12px; }
+  .btn { padding: 12px 14px; font-size: 14px; min-width: 0; }
+
+  /* 已有分组卡片：改单列排 + 图标缩小放右上 */
+  .group-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 12px;
+    position: relative;
+  }
+  .gicon {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+  }
+  .gicon img { width: 30px; height: 30px; }
+  .gicon img.ttm-logo { width: 60px; height: 22px; }
+  .gname { font-size: 15px; padding-right: 44px; }
+  .gid, .gstats { font-size: 12px; }
+  .gactions {
+    justify-content: stretch;
+    gap: 8px;
+  }
+  .gactions .btn {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 8px;
+  }
+
+  /* 弹窗 */
+  .modal { padding: 10px; }
+  .modal-card { padding: 14px; border-radius: 14px; }
+  .modal-title { font-size: 17px; }
+  .modal-sub { font-size: 13px; }
+  .kind-grid { grid-template-columns: 1fr; gap: 10px; }
+  .kind-btn { padding: 12px; grid-template-columns: 44px 1fr; gap: 10px; }
+  .kind-btn img { width: 44px; height: 44px; }
+  #pickTtm { grid-template-columns: 90px 1fr; }
+  #pickTtm img { width: 90px; height: 34px; }
+  .kind-name { font-size: 16px; }
+  .kind-desc { font-size: 13px; }
+  .modal-actions { flex-direction: column-reverse; gap: 8px; }
+  .modal-actions .btn { width: 100%; }
+}
+
 
