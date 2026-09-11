@@ -65,7 +65,8 @@ function renderGroups(data) {
     const left = document.createElement("div");
     const tags = [];
     const kind0 = (g.kind || "wechat").toLowerCase();
-    if (kind0 === "kakao") tags.push("KAKAO");
+    if (kind0 === "kbpay") tags.push("KB PAY");
+    else if (kind0 === "kakao") tags.push("KAKAO");
     else if (kind0 === "ttm_alipay") tags.push("TTM");
     else tags.push("MIX");
     if (g.locked) tags.push("LOCK");
@@ -81,8 +82,8 @@ function renderGroups(data) {
     icon.className = "gicon";
     const img = document.createElement("img");
     const kind = kind0;
-    img.src = kind === "kakao" ? "/static/icon_kakao.svg" : (kind === "ttm_alipay" ? "/static/icon_ttm.png" : "/static/icon_wechat.svg");
-    img.alt = kind === "kakao" ? "Kakao" : (kind === "ttm_alipay" ? "ThaiTicketMajor" : "WeChat");
+    img.src = kind === "kbpay" ? "/static/icon_kbpay.svg" : (kind === "kakao" ? "/static/icon_kakao.svg" : (kind === "ttm_alipay" ? "/static/icon_ttm.png" : "/static/icon_wechat.svg"));
+    img.alt = kind === "kbpay" ? "KB Pay" : (kind === "kakao" ? "Kakao" : (kind === "ttm_alipay" ? "ThaiTicketMajor" : "WeChat"));
     if (kind === "ttm_alipay") img.className = "ttm-logo";
     icon.appendChild(img);
 
@@ -229,6 +230,7 @@ document.getElementById("btnReset").addEventListener("click", async () => {
 
 function setupModalHandlers() {
   const pickWechat = document.getElementById("pickWechat");
+  const pickKbpay = document.getElementById("pickKbpay");
   const pickKakao = document.getElementById("pickKakao");
   const pickTtm = document.getElementById("pickTtm");
   const wrap = document.getElementById("kakaoPwWrap");
@@ -261,6 +263,24 @@ function setupModalHandlers() {
         const data = await createGroup({
           name,
           kind: "wechat",
+          password: "",
+          pgwEmail: "",
+          pgwName: ""
+        });
+        if (data && data.group_id) window.location.href = `/g/${data.group_id}`;
+      } catch (e) {
+        window.alert(String(e && e.message ? e.message : e));
+      }
+    });
+  }
+
+  if (pickKbpay) {
+    pickKbpay.addEventListener("click", async () => {
+      const name = getName();
+      try {
+        const data = await createGroup({
+          name,
+          kind: "kbpay",
           password: "",
           pgwEmail: "",
           pgwName: ""

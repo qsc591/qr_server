@@ -393,4 +393,300 @@ a:hover {
   }
 }
 
+/* ===== 子分组标题（未扫描 / 已扫描） ===== */
+.group-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px 8px;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  position: sticky;
+  top: 0;
+  background: rgba(15, 26, 46, 0.97);
+  z-index: 2;
+}
+.group-head.scanned {
+  color: rgba(41, 196, 109, 0.9);
+}
+.group-head.collapsible {
+  cursor: pointer;
+  user-select: none;
+}
+.group-head .caret {
+  width: 12px;
+  display: inline-grid;
+  place-items: center;
+  font-size: 10px;
+}
+.group-head .cnt {
+  font-size: 11px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: inherit;
+  font-variant-numeric: tabular-nums;
+}
+.group-head .line {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ===== 序号 ===== */
+.seat-topline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.seq-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 28px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 7px;
+  background: rgba(255, 204, 0, 0.14);
+  border: 1px solid rgba(255, 204, 0, 0.3);
+  color: rgba(255, 204, 0, 0.95);
+  font-weight: 900;
+  font-size: 12px;
+  flex: 0 0 auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.seat-item.scanned .seq-badge {
+  background: rgba(41, 196, 109, 0.14);
+  border-color: rgba(41, 196, 109, 0.3);
+  color: rgba(41, 196, 109, 0.95);
+}
+.value#curSeq {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-weight: 900;
+  color: rgba(255, 204, 0, 0.95);
+}
+
+/* ===== KB Pay 独立卡片（贴合预览排版） ===== */
+#kbpayCard {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: left;
+  flex: 0 0 auto;
+}
+#kbpayCard .kb-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+#kbpayCard .site-chip {
+  font-size: 12px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(231, 238, 252, 0.06);
+  color: var(--muted);
+}
+#kbpayCard .kb-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: rgba(231, 238, 252, 0.9);
+}
+#kbpayCard .kb-title .dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--yellow);
+  margin-right: 7px;
+  vertical-align: 1px;
+}
+#kbpayCard .pay-hero {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: 18px;
+  align-items: stretch;
+}
+#kbpayCard .qr-wrap {
+  display: flex;
+  flex-direction: column;
+}
+#kbpayCard .qr-box {
+  background: #fff;
+  border-radius: 16px;
+  padding: 14px;
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+}
+#kbpayCard .qr-box img {
+  width: 100%;
+  height: auto;
+  max-width: 210px;
+  display: block;
+  image-rendering: pixelated;
+}
+#kbpayCard .qr-under {
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 8px;
+}
+#kbpayCard .pay-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  justify-content: center;
+}
+#kbpayCard .code-box {
+  border: 1px solid rgba(255, 204, 0, 0.35);
+  background: rgba(255, 204, 0, 0.08);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+#kbpayCard .code-label {
+  color: var(--muted);
+  font-size: 13px;
+}
+#kbpayCard .code-big {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 46px;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  color: var(--text);
+}
+#kbpayCard .code-actions {
+  margin-top: 12px;
+}
+#kbpayCard .code-actions .btn {
+  padding: 8px 12px;
+  font-size: 13px;
+  min-width: 0;
+}
+#kbpayCard .paymethod {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 180, 0, 0.4);
+  background: rgba(255, 180, 0, 0.1);
+  font-weight: 800;
+  font-size: 14px;
+  color: #ffd873;
+}
+#kbpayCard .paymethod .kbmark {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: #ffb400;
+  color: #4a2d00;
+  font-weight: 950;
+  font-size: 11px;
+  display: grid;
+  place-items: center;
+}
+#kbpayCard .expiry {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: rgba(11, 18, 32, 0.35);
+}
+#kbpayCard .expiry .cd {
+  font-size: 26px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+#kbpayCard .expiry .state {
+  font-size: 13px;
+  font-weight: 800;
+}
+#kbpayCard .expiry.ok .cd,
+#kbpayCard .expiry.ok .state {
+  color: var(--green);
+}
+#kbpayCard .expiry.warn .cd,
+#kbpayCard .expiry.warn .state {
+  color: var(--yellow);
+}
+#kbpayCard .expiry.dead .cd,
+#kbpayCard .expiry.dead .state {
+  color: var(--red);
+}
+#kbpayCard .kb-metagrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 18px;
+}
+#kbpayCard .kb-mrow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3px;
+}
+#kbpayCard .kb-mrow.full {
+  grid-column: 1 / -1;
+}
+#kbpayCard .kb-mlabel {
+  color: var(--muted);
+  font-size: 12px;
+}
+#kbpayCard .kb-mval {
+  font-size: 16px;
+  overflow-wrap: anywhere;
+}
+#kbpayCard .kb-steps {
+  border: 1px dashed rgba(231, 238, 252, 0.22);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: rgba(11, 18, 32, 0.3);
+}
+#kbpayCard .kb-steps .h {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+#kbpayCard .kb-steps-body {
+  font-size: 14px;
+  white-space: pre-line;
+  color: rgba(231, 238, 252, 0.92);
+}
+#kbpayCard .kb-msg {
+  font-size: 14px;
+}
+#kbpayCard .status-banner {
+  text-align: center;
+}
+@media (max-width: 700px) {
+  #kbpayCard .pay-hero {
+    grid-template-columns: 1fr;
+  }
+  #kbpayCard .qr-box {
+    justify-self: center;
+    width: 100%;
+    max-width: 300px;
+  }
+  #kbpayCard .kb-metagrid {
+    grid-template-columns: 1fr;
+  }
+  #kbpayCard .code-big {
+    font-size: 40px;
+  }
+}
+
+/* KB Pay 明细行较多时允许卡片内部滚动，避免二维码被挤压 */
+.card {
+  overflow-y: auto;
+}
+
 

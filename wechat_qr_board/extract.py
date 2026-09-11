@@ -918,3 +918,178 @@ def extract_kakao_pay_entries(
     return seat_key, seat_label, account_info, items
 
 
+# ===================== KB Pay (KB국민카드 · Melon KR) =====================
+
+def _embed_field_map(embed_dict: Dict) -> Dict[str, str]:
+    out: Dict[str, str] = {}
+    for f in (embed_dict.get("fields") or []):
+        if not isinstance(f, dict):
+            continue
+        name = str(f.get("name") or "").strip()
+        val = str(f.get("value") or "").strip()
+        if name and val and name not in out:
+            out[name] = val
+    return out
+
+
+def _kb_field_get(fields: Dict[str, str], *contains: str) -> str:
+    """按字段名包含关系取值（大小写不敏感；中韩文按原样匹配）。"""
+    for k, v in fields.items():
+        kl = (k or "").strip().lower()
+        for c in contains:
+            if c and c.lower() in kl:
+                return v
+    return ""
+
+
+def _is_kbpay_embed(embed_dict: Dict) -> bool:
+    """判定：任一「支付方式 / Pay Type」字段值里含 'KB Pay'。"""
+    for f in (embed_dict.get("fields") or []):
+        if not isinstance(f, dict):
+            continue
+        name = _normalize_field(str(f.get("name") or ""))
+        if ("支付方式" in name) or ("pay type" in name):
+            v = str(f.get("value") or "").lower()
+            if ("kb pay" in v) or ("kbpay" in v.replace(" ", "")):
+                return True
+    return False
+
+
+def _extract_kbpay_embed_dict(message) -> Optional[Dict]:
+    embeds = getattr(message, "embeds", None) or []
+    for em in embeds:
+        try:
+            d = em.to_dict()
+        except Exception:
+            continue
+        if _is_kbpay_embed(d):
+            return d
+    return None
+
+
+def _parse_kbpay_show_time(round_text: str) -> Dict[str, str]:
+    """
+    Round: "Show Time: 20270123 1800"（也兼容 20270123 18:00）
+    返回 date_key=YYYYMMDD, show_time=YYYY-MM-DD HH:MM
+    """
+    out = {"date_key": "", "show_time": ""}
+    m = re.search(r"(\d{8})\s+(\d{2}):?(\d{2})", round_text or "")
+    if not m:
+        return out
+    ymd, hh, mm = m.group(1), m.group(2), m.group(3)
+    out["date_key"] = ymd
+    out["show_time"] = f"{ymd[0:4]}-{ymd[4:6]}-{ymd[6:8]} {hh}:{mm}"
+    return out
+
+
+def _parse_kbpay_seat(seat_no_text: str) -> Dict[str, str]:
+    """
+    Seat No: ```전 floor  row 15 seat 7 price 135000```
+    → seat_detail="전 floor row 15 seat 7", price="135000"
+    """
+    t = _strip_codeblock(seat_no_text)
+    out = {"seat_detail": t, "price": ""}
+    m = re.search(r"\bprice\b\s*([0-9]+(?:\.[0-9]+)?)", t, re.IGNORECASE)
+    if m:
+        out["price"] = m.group(1)
+        out["seat_detail"] = t[: m.start()].strip()
+    out["seat_detail"] = re.sub(r"\s+", " ", out["seat_detail"]).strip()
+    return out
+
+
+def _parse_kbpay_event(value: str) -> Tuple[str, str]:
+    """Event 字段：优先 markdown 链接 [名称](url)。返回 (event_name, event_url)。"""
+    v = value or ""
+    m = re.search(r"\[([^\]]+)\]\((https?://[^)]+)\)", v)
+    if m:
+        return m.group(1).strip(), sanitize_url(m.group(2))
+    name = ""
+    for ln in v.splitlines():
+        ln = ln.strip().strip("`").strip()
+        if ln:
+            name = ln
+            break
+    url = ""
+    mu = _URL_RE.search(v)
+    if mu:
+        url = sanitize_url(mu.group(0))
+    return name, url
+
+
+def extract_kbpay_entries(
+    message,
+    *,
+    seat_field_name_patterns: Sequence[str],
+    account_field_name_patterns: Sequence[str],
+    countdown_seconds: int,
+) -> Optional[Tuple[str, str, str, List[Tuple[str, str, float, float, Dict[str, str]]]]]:
+    """
+    KB Pay（KB국민카드 · Melon KR 等）专用：
+    - 识别：embed 里「支付方式 / Pay Type」字段值含 'KB Pay'
+    - 二维码：embed.image.url（如 api.qrserver.com/...?data=<결제코드>）
+    - 结算码：결제코드 / 结算码 字段
+    - 过期：Order Expire 里的 <t:...>
+    """
+    d = _extract_kbpay_embed_dict(message)
+    if not d:
+        return None
+
+    qr_url = sanitize_url(str((d.get("image") or {}).get("url") or ""))
+    if not qr_url:
+        return None
+
+    fields = _embed_field_map(d)
+
+    settle_code = _kb_field_get(fields, "결제코드", "结算码", "결제 코드").replace("||", "").strip()
+    if not settle_code:
+        m = re.search(r"[?&]data=([^&#]+)", qr_url)
+        if m:
+            settle_code = m.group(1).strip()
+
+    # 优先「支付方式」字段（앱카드…），其次才回退 Pay Type
+    pay_method = (_kb_field_get(fields, "支付方式") or _kb_field_get(fields, "pay type")).replace("||", "").strip()
+    site = (fields.get("Site") or "").strip()
+    zone = (fields.get("Zone") or "").replace("||", "").strip()
+    qty = (fields.get("Quantity") or "").strip()
+    steps = _kb_field_get(fields, "扫码步骤", "扫码").strip()
+    round_txt = fields.get("Round", "")
+    seat_no = fields.get("Seat No", "")
+    expire_txt = fields.get("Order Expire", "")
+
+    event_name, event_url = _parse_kbpay_event(fields.get("Event", ""))
+    time_info = _parse_kbpay_show_time(round_txt)
+    seat_price = _parse_kbpay_seat(seat_no)
+
+    date_key = time_info.get("date_key") or ""
+    seat_detail = seat_price.get("seat_detail") or ""
+    # 左侧展示：日期在上、座位在下
+    seat_label = f"{date_key} {seat_detail}".strip() if date_key else (seat_detail or zone or "KB Pay")
+    # seat_key 用결제코드做唯一性（不同订单不合并）
+    seat_key = f"{settle_code} {seat_label}".strip() if settle_code else choose_seat_key(seat_label)
+
+    account_info = extract_account_info_from_embeds(
+        message, account_field_name_patterns, mask_password=False
+    )
+    link = make_message_link(message)
+    now = time.time()
+    expires_at = _parse_discord_timestamp(expire_txt) or (now + float(countdown_seconds))
+
+    meta = {
+        "source": "kbpay",
+        "settle_code": settle_code,
+        "pay_method": pay_method,
+        "site": site,
+        "zone": zone,
+        "seat_detail": seat_detail,
+        "price": seat_price.get("price") or "",
+        "date": time_info.get("show_time") or "",
+        "quantity": str(qty or "").strip(),
+        "event": event_name,
+        "event_url": event_url,
+        "steps": steps,
+        "qr_large": True,
+    }
+    items = [(qr_url, link, now, float(expires_at), meta)]
+    return seat_key, seat_label, account_info, items
+
+

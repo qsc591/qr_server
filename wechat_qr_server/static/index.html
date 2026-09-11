@@ -36,22 +36,30 @@
       <div class="modal-mask"></div>
       <div class="modal-card" role="dialog" aria-modal="true" aria-label="选择分组类型">
         <div class="modal-title">选择分组类型</div>
-        <div class="modal-sub">微信组 / Kakao 组 / ThaiTicketMajor(支付宝) 各自轮询，互不影响。</div>
+        <div class="modal-sub">KB Pay 组 / 综合分组 / Kakao 组 / ThaiTicketMajor(支付宝) 各自轮询，互不影响。</div>
         <div class="kind-grid">
+          <button class="kind-btn" id="pickKbpay" type="button">
+            <img src="/static/icon_kbpay.svg" alt="KB Pay" />
+            <div class="kind-name">KB Pay 组</div>
+            <div class="kind-desc kind-desc-3lines">
+              <div class="kind-desc-line">KB Pay (KB국민카드) · Melon KR</div>
+              <div class="kind-desc-line">结算码 + 二维码扫码</div>
+              <div class="kind-desc-line">后续新增抓取来源也归这里</div>
+            </div>
+          </button>
           <button class="kind-btn" id="pickWechat" type="button">
             <img src="/static/icon_wechat.svg" alt="WeChat" />
             <div class="kind-name">综合分组</div>
-            <div class="kind-desc kind-desc-3lines">
-              <div class="kind-desc-line">Xbot: HKT</div>
-              <div class="kind-desc-line">Spider: ITP Global</div>
-              <div class="kind-desc-line">TSP: HKT &amp; ITP KR &amp; ITP Global &amp; Melon KR</div>
+            <div class="kind-desc kind-desc-2lines">
+              <div class="kind-desc-line">HKT · ITP Global</div>
+              <div class="kind-desc-line">ITP KR · Melon KR</div>
             </div>
           </button>
           <button class="kind-btn" id="pickKakao" type="button">
             <img src="/static/icon_kakao.svg" alt="Kakao" />
             <div class="kind-name">Kakao组</div>
             <div class="kind-desc kind-desc-2lines">
-              <div class="kind-desc-line">仅接收 Kakao Pay（T‑Splash）</div>
+              <div class="kind-desc-line">仅接收 Kakao Pay</div>
               <div class="kind-desc-line">使用重置密码（reset_password）</div>
             </div>
           </button>

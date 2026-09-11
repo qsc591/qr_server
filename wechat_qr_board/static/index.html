@@ -18,8 +18,52 @@
 
       <main class="right">
         <div class="card">
-          <div class="meta">
+          <div id="kbpayCard" style="display:none;">
+            <div class="status-banner" id="kbBanner" style="display:none;"></div>
+            <div class="kb-head">
+              <span class="seq-badge" id="kbSeq">#-</span>
+              <span class="site-chip" id="kbSite">-</span>
+              <span class="kb-title" id="kbTitle"><span class="dot"></span>Waiting for payment</span>
+            </div>
+            <div class="pay-hero">
+              <div class="qr-wrap">
+                <div class="qr-box"><img id="kbQrImg" alt="QR" /></div>
+                <div class="qr-under">用 KB Pay App 扫此码 · 或手输右侧结算码</div>
+              </div>
+              <div class="pay-side">
+                <div class="code-box">
+                  <div class="code-label">결제코드 / 结算码</div>
+                  <div class="code-big" id="kbCode">-</div>
+                  <div class="code-actions"><button class="btn primary" id="kbCopy" type="button">复制结算码</button></div>
+                </div>
+                <div class="paymethod"><span class="kbmark">KB</span><span id="kbPayM">-</span></div>
+                <div class="expiry" id="kbExp">
+                  <div class="cd" id="kbCd">--:--</div>
+                  <div class="state" id="kbState">-</div>
+                </div>
+              </div>
+            </div>
+            <div class="kb-metagrid">
+              <div class="kb-mrow full"><div class="kb-mlabel">Event</div><div class="kb-mval"><a id="kbEvent" href="#" target="_blank" rel="noreferrer">-</a></div></div>
+              <div class="kb-mrow"><div class="kb-mlabel">日期 / Round</div><div class="kb-mval" id="kbDate">-</div></div>
+              <div class="kb-mrow"><div class="kb-mlabel">区 / Zone</div><div class="kb-mval" id="kbZoneV">-</div></div>
+              <div class="kb-mrow"><div class="kb-mlabel">座位</div><div class="kb-mval" id="kbSeat">-</div></div>
+              <div class="kb-mrow"><div class="kb-mlabel">价格</div><div class="kb-mval" id="kbPrice">-</div></div>
+              <div class="kb-mrow"><div class="kb-mlabel">数量</div><div class="kb-mval" id="kbQty">-</div></div>
+              <div class="kb-mrow full"><div class="kb-mlabel">抓取时间</div><div class="kb-mval" id="kbCap">-</div></div>
+            </div>
+            <div class="kb-steps">
+              <div class="h">扫码步骤</div>
+              <div class="kb-steps-body" id="kbStepsBody">-</div>
+            </div>
+            <div class="kb-msg"><a id="kbLink" href="#" target="_blank" rel="noreferrer">打开 Discord 消息</a></div>
+          </div>
+          <div class="meta" id="genericMeta">
             <div class="status-banner" id="statusBanner" style="display: none;"></div>
+            <div class="meta-row" id="seqRow" style="display:none;">
+              <div class="label">序号</div>
+              <div class="value" id="curSeq">-</div>
+            </div>
             <div class="meta-row">
               <div class="label">位置</div>
               <div class="value" id="curSeat">-</div>
@@ -61,10 +105,6 @@
               </div>
             </div>
             <div class="meta-row">
-              <div class="label">账号</div>
-              <div class="value mono" id="curAccount">-</div>
-            </div>
-            <div class="meta-row">
               <div class="label">消息</div>
               <div class="value">
                 <a id="curLink" href="#" target="_blank" rel="noreferrer">-</a>
@@ -72,7 +112,7 @@
             </div>
           </div>
 
-          <div class="qr">
+          <div class="qr" id="genericQr">
             <img id="qrImg" alt="QR" />
             <div class="qr-hint" id="qrHint">等待抓取…</div>
           </div>

@@ -13,6 +13,7 @@ from aiohttp import web
 from wechat_qr_board.extract import (
     extract_account_info_from_embeds,
     extract_kakao_pay_entries,
+    extract_kbpay_entries,
     extract_seat_label_from_embeds,
     extract_wechat_qr_entries,
     make_message_link,
@@ -297,6 +298,23 @@ async def main_async() -> None:
                     items=items,
                 )
                 return
+
+        # ===== KB Pay (KB국민카드 · Melon KR)：按「支付方式」字段含 KB Pay 识别 =====
+        kbpay_result = extract_kbpay_entries(
+            message,
+            seat_field_name_patterns=cfg.seat_field_name_patterns,
+            account_field_name_patterns=cfg.account_field_name_patterns,
+            countdown_seconds=cfg.countdown_seconds,
+        )
+        if kbpay_result:
+            seat_key, seat_label, account_info, items = kbpay_result
+            groups.distribute_kbpay_items(
+                seat_key=seat_key,
+                seat_label=seat_label,
+                account_info=account_info,
+                items=items,
+            )
+            return
 
         result = extract_wechat_qr_entries(
             message,

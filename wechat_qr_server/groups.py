@@ -16,7 +16,7 @@ class Group:
     name: str
     created_at: float
     store: Store
-    kind: str = "wechat"  # wechat | kakao | ttm_alipay
+    kind: str = "wechat"  # wechat | kakao | ttm_alipay | kbpay
     password: str = ""  # non-empty => locked
     pgw_email: str = ""
     pgw_name: str = ""
@@ -41,29 +41,35 @@ class GroupManager:
         self.data_dir = data_dir
         self.groups_dir = os.path.join(self.data_dir, "groups")
         self.groups: Dict[str, Group] = {}
-        # 三套轮询：微信 / Kakao / ThaiTicketMajor(支付宝) 互不影响
+        # 四套轮询：微信 / Kakao / ThaiTicketMajor(支付宝) / KB Pay 互不影响
         self._rr_keys_wechat: List[str] = []
         self._rr_keys_kakao: List[str] = []
         self._rr_keys_ttm: List[str] = []
+        self._rr_keys_kbpay: List[str] = []
         self._rr_i_wechat = 0
         self._rr_i_kakao = 0
         self._rr_i_ttm = 0
+        self._rr_i_kbpay = 0
         # 无对应分组时先暂存，分组创建后再轮询分发（保持 seat/account 信息）
         self._backlog_wechat: List[Tuple[str, str, str, List[Tuple[str, str, float, float, Dict[str, Any]]]]] = []
         self._backlog_kakao: List[Tuple[str, str, str, List[Tuple[str, str, float, float, Dict[str, Any]]]]] = []
         self._backlog_ttm: List[Tuple[str, str, str, List[Tuple[str, str, float, float, Dict[str, Any]]]]] = []
+        self._backlog_kbpay: List[Tuple[str, str, str, List[Tuple[str, str, float, float, Dict[str, Any]]]]] = []
 
     def reset_all_groups(self) -> None:
         self.groups.clear()
         self._rr_keys_wechat = []
         self._rr_keys_kakao = []
         self._rr_keys_ttm = []
+        self._rr_keys_kbpay = []
         self._rr_i_wechat = 0
         self._rr_i_kakao = 0
         self._rr_i_ttm = 0
+        self._rr_i_kbpay = 0
         self._backlog_wechat = []
         self._backlog_kakao = []
         self._backlog_ttm = []
+        self._backlog_kbpay = []
         # 清空落盘目录（每次启动删除所有群组）
         if os.path.exists(self.groups_dir):
             shutil.rmtree(self.groups_dir, ignore_errors=True)
@@ -80,7 +86,7 @@ class GroupManager:
         ttm_capture_qr: bool = True,
     ) -> Group:
         kind = (kind or "wechat").strip().lower()
-        if kind not in ("wechat", "kakao", "ttm_alipay"):
+        if kind not in ("wechat", "kakao", "ttm_alipay", "kbpay"):
             kind = "wechat"
         password = (password or "").strip()
         if kind == "kakao" and not password:
@@ -110,6 +116,9 @@ class GroupManager:
         elif kind == "ttm_alipay":
             self._rr_keys_ttm.append(gid)
             self._flush_backlog_ttm()
+        elif kind == "kbpay":
+            self._rr_keys_kbpay.append(gid)
+            self._flush_backlog_kbpay()
         else:
             self._rr_keys_wechat.append(gid)
             self._flush_backlog_wechat()
@@ -166,6 +175,23 @@ class GroupManager:
                     i = i % len(keys)
             self._rr_keys_ttm = keys
             self._rr_i_ttm = i
+        elif getattr(g, "kind", "wechat") == "kbpay":
+            keys = self._rr_keys_kbpay
+            i = self._rr_i_kbpay
+            if gid in keys:
+                idx = keys.index(gid)
+                keys.pop(idx)
+                if idx < i:
+                    i -= 1
+            if not keys:
+                i = 0
+            else:
+                if i < 0:
+                    i = 0
+                if i >= len(keys):
+                    i = i % len(keys)
+            self._rr_keys_kbpay = keys
+            self._rr_i_kbpay = i
         else:
             keys = self._rr_keys_wechat
             i = self._rr_i_wechat
@@ -232,6 +258,15 @@ class GroupManager:
             self._rr_i_ttm = 0
         gid = self._rr_keys_ttm[self._rr_i_ttm]
         self._rr_i_ttm = (self._rr_i_ttm + 1) % len(self._rr_keys_ttm)
+        return self.groups.get(gid)
+
+    def _pick_group_rr_kbpay(self) -> Optional[Group]:
+        if not self._rr_keys_kbpay:
+            return None
+        if self._rr_i_kbpay >= len(self._rr_keys_kbpay):
+            self._rr_i_kbpay = 0
+        gid = self._rr_keys_kbpay[self._rr_i_kbpay]
+        self._rr_i_kbpay = (self._rr_i_kbpay + 1) % len(self._rr_keys_kbpay)
         return self.groups.get(gid)
 
     def pick_ttm_group(self) -> Optional[Group]:
@@ -388,6 +423,43 @@ class GroupManager:
             )
             n += 1
         return n
+
+    def distribute_kbpay_items(
+        self,
+        *,
+        seat_key: str,
+        seat_label: str,
+        account_info: str,
+        items: List[Tuple[str, str, float, float, Dict[str, Any]]],
+    ) -> int:
+        """
+        KB Pay 专用：只在 kbpay 分组中轮询分发；没有 kbpay 分组则暂存 backlog。
+        """
+        n = 0
+        if not self._rr_keys_kbpay:
+            self._backlog_kbpay.append((seat_key, seat_label, account_info, items))
+            return 0
+        for it in items:
+            g = self._pick_group_rr_kbpay()
+            if not g:
+                self._backlog_kbpay.append((seat_key, seat_label, account_info, [it]))
+                continue
+            g.store.add_items(seat_key=seat_key, seat_label=seat_label, account_info=account_info, items=[it])
+            n += 1
+        return n
+
+    def _flush_backlog_kbpay(self) -> None:
+        if not self._rr_keys_kbpay or not self._backlog_kbpay:
+            return
+        pending = self._backlog_kbpay
+        self._backlog_kbpay = []
+        for seat_key, seat_label, account_info, items in pending:
+            self.distribute_kbpay_items(
+                seat_key=seat_key,
+                seat_label=seat_label,
+                account_info=account_info,
+                items=items,
+            )
 
     def _flush_backlog_wechat(self) -> None:
         if not self._rr_keys_wechat or not self._backlog_wechat:

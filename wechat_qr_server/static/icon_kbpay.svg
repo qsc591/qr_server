@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <rect x="18" y="18" width="220" height="220" rx="44" fill="#FFCC00"/>
+  <text x="128" y="118" text-anchor="middle" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="86" font-weight="900" fill="#3a2b00">KB</text>
+  <text x="128" y="182" text-anchor="middle" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="46" font-weight="800" fill="#3a2b00">Pay</text>
+</svg>

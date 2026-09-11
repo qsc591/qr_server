@@ -11,6 +11,7 @@ class QrItem:
     captured_at: float  # epoch seconds
     expires_at: float  # epoch seconds
     scanned_at: Optional[float] = None
+    seq: int = 0  # 抓取序号（按入库先后 #1、#2…）
     meta: Dict[str, Any] = field(default_factory=dict)
 
 
@@ -53,6 +54,7 @@ def seat_state_to_dict(seat: SeatState) -> Dict:
             "message_link": cur.message_link,
             "captured_at": cur.captured_at,
             "expires_at": cur.expires_at,
+            "seq": int(getattr(cur, "seq", 0) or 0),
             "meta": cur.meta or {},
         },
         "last_scanned": None
@@ -62,6 +64,7 @@ def seat_state_to_dict(seat: SeatState) -> Dict:
             "message_link": last.message_link,
             "captured_at": last.captured_at,
             "scanned_at": last.scanned_at,
+            "seq": int(getattr(last, "seq", 0) or 0),
             "meta": last.meta or {},
         },
     }

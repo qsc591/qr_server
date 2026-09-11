@@ -27,6 +27,7 @@ class Store:
         self.seats: Dict[str, SeatState] = {}
         self._seen_item_keys: set[str] = set()
         self._seen_ttm_jump_keys: set[str] = set()
+        self._seq_counter = 0  # 抓取序号自增（按入库先后）
 
     def preload_seats(self, seat_labels: List[str]) -> None:
         with self._lock:
@@ -60,12 +61,14 @@ class Store:
                 if k in self._seen_item_keys:
                     continue
                 self._seen_item_keys.add(k)
+                self._seq_counter += 1
                 seat.pending.append(
                     QrItem(
                         qr_url=qr_url,
                         message_link=message_link,
                         captured_at=captured_at,
                         expires_at=expires_at,
+                        seq=self._seq_counter,
                         meta=meta or {},
                     )
                 )

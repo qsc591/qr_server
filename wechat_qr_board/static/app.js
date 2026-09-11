@@ -3,6 +3,7 @@ let isAdvancing = false;
 let lastShownQrUrl = null;
 let toastTimer = null;
 let ttmJumped = {}; // seat_key -> true (unlock Next after jumping to Alipay)
+let scannedCollapsed = true; // 左侧「已扫描」子分组默认折叠
 
 async function logTtmJump(seatKey) {
   const k = String(seatKey || "").trim();
@@ -65,7 +66,8 @@ function render(state) {
   }
 
   seatListEl.innerHTML = "";
-  state.seats.forEach((seat) => {
+
+  const buildSeatItem = (seat) => {
     const item = document.createElement("div");
     let isExpired = false;
     item.className =
@@ -80,22 +82,29 @@ function render(state) {
     const name = document.createElement("div");
     name.className = "seat-name";
     const parts = splitSeatLabel(seat.seat_label);
+    const seqN =
+      (seat.current && seat.current.seq) ||
+      (seat.last_scanned && seat.last_scanned.seq) ||
+      0;
+
+    const topline = document.createElement("div");
+    topline.className = "seat-topline";
+    if (seqN) {
+      const badge = document.createElement("span");
+      badge.className = "seq-badge";
+      badge.textContent = "#" + seqN;
+      topline.appendChild(badge);
+    }
     const line1 = document.createElement("div");
     line1.className = "seat-line seat-line-1";
     line1.textContent = parts.top || "-";
-    name.appendChild(line1);
+    topline.appendChild(line1);
+    name.appendChild(topline);
     if (parts.bottom) {
       const line2 = document.createElement("div");
       line2.className = "seat-line seat-line-2";
       line2.textContent = parts.bottom;
       name.appendChild(line2);
-    }
-    const acc = (seat.account_info || "").trim();
-    if (acc) {
-      const line3 = document.createElement("div");
-      line3.className = "seat-line seat-line-3";
-      line3.textContent = acc.length > 60 ? acc.slice(0, 60) + "…" : acc;
-      name.appendChild(line3);
     }
 
     const status = document.createElement("div");
@@ -130,8 +139,32 @@ function render(state) {
     item.appendChild(timer);
     item.appendChild(right);
     if (isExpired) item.classList.add("expired");
-    seatListEl.appendChild(item);
-  });
+    return item;
+  };
+
+  const buildGroupHead = (label, count, isScanned, collapsed) => {
+    const head = document.createElement("div");
+    head.className = "group-head" + (isScanned ? " scanned collapsible" : "");
+    let inner = "";
+    if (isScanned) inner += `<span class="caret">${collapsed ? "▸" : "▾"}</span>`;
+    inner += `<span>${label}</span><span class="cnt">${count}</span><span class="line"></span>`;
+    head.innerHTML = inner;
+    return head;
+  };
+
+  const pendingSeats = state.seats.filter((s) => s.status !== "scanned");
+  const doneSeats = state.seats.filter((s) => s.status === "scanned");
+
+  seatListEl.appendChild(buildGroupHead("未扫描", pendingSeats.length, false, false));
+  pendingSeats.forEach((seat) => seatListEl.appendChild(buildSeatItem(seat)));
+
+  const scannedHead = buildGroupHead("已扫描", doneSeats.length, true, scannedCollapsed);
+  scannedHead.onclick = () => {
+    scannedCollapsed = !scannedCollapsed;
+    render(state);
+  };
+  seatListEl.appendChild(scannedHead);
+  if (!scannedCollapsed) doneSeats.forEach((seat) => seatListEl.appendChild(buildSeatItem(seat)));
 
   const cur = state.seats.find((s) => s.seat_key === selectedSeatKey) || null;
   const curSeatEl = document.getElementById("curSeat");
@@ -154,6 +187,31 @@ function render(state) {
   const btnDownloadCsvEl = document.getElementById("btnDownloadCsv");
   const btnDownloadTtmCsvEl = document.getElementById("btnDownloadTtmCsv");
   const statusBannerEl = document.getElementById("statusBanner");
+  const genericMetaEl = document.getElementById("genericMeta");
+  const genericQrEl = document.getElementById("genericQr");
+  const kbpayCardEl = document.getElementById("kbpayCard");
+  const kbSeqEl = document.getElementById("kbSeq");
+  const kbSiteEl = document.getElementById("kbSite");
+  const kbTitleEl = document.getElementById("kbTitle");
+  const kbBannerEl = document.getElementById("kbBanner");
+  const kbQrImgEl = document.getElementById("kbQrImg");
+  const kbCodeEl = document.getElementById("kbCode");
+  const kbCopyEl = document.getElementById("kbCopy");
+  const kbPayMEl = document.getElementById("kbPayM");
+  const kbExpEl = document.getElementById("kbExp");
+  const kbCdEl = document.getElementById("kbCd");
+  const kbStateEl = document.getElementById("kbState");
+  const kbEventEl = document.getElementById("kbEvent");
+  const kbDateEl = document.getElementById("kbDate");
+  const kbZoneVEl = document.getElementById("kbZoneV");
+  const kbSeatEl = document.getElementById("kbSeat");
+  const kbPriceEl = document.getElementById("kbPrice");
+  const kbQtyEl = document.getElementById("kbQty");
+  const kbCapEl = document.getElementById("kbCap");
+  const kbStepsBodyEl = document.getElementById("kbStepsBody");
+  const kbLinkEl = document.getElementById("kbLink");
+  const seqRowEl = document.getElementById("seqRow");
+  const curSeqEl = document.getElementById("curSeq");
 
   if (!cur) {
     curSeatEl.textContent = "-";
@@ -164,11 +222,15 @@ function render(state) {
     if (curQtyEl) curQtyEl.textContent = "-";
     if (xbotDetailsEl) xbotDetailsEl.style.display = "none";
     if (ttmDetailsEl) ttmDetailsEl.style.display = "none";
+    if (kbpayCardEl) kbpayCardEl.style.display = "none";
+    if (genericMetaEl) genericMetaEl.style.display = "";
+    if (genericQrEl) genericQrEl.style.display = "";
+    if (seqRowEl) seqRowEl.style.display = "none";
     if (btnAlipayJumpEl) {
       btnAlipayJumpEl.style.display = "none";
       btnAlipayJumpEl.href = "#";
     }
-    curAccountEl.textContent = "-";
+    if (curAccountEl) curAccountEl.textContent = "-";
     curLinkEl.textContent = "-";
     curLinkEl.href = "#";
     qrImgEl.style.display = "none";
@@ -181,7 +243,7 @@ function render(state) {
   // 右侧位置也按两行显示（日期在上，座位在下）
   const curParts = splitSeatLabel(cur.seat_label);
   curSeatEl.textContent = curParts.bottom ? `${curParts.top}\n${curParts.bottom}` : curParts.top;
-  curAccountEl.textContent = cur.account_info || "-";
+  if (curAccountEl) curAccountEl.textContent = cur.account_info || "-";
   // 优先展示 current；若没有 current，则展示 last_scanned（防误点消失）
   const shown = cur.current || cur.last_scanned || null;
   if (curCapturedAtEl) {
@@ -190,11 +252,107 @@ function render(state) {
   }
   const meta = (shown && shown.meta) ? shown.meta : {};
   const source = meta && meta.source ? String(meta.source) : "";
+  const isKbpay = source === "kbpay";
   const isXbot = source === "xbot" || source === "spider" || source === "alipay_tsplash";
   const isTtm = source === "ttm_alipay" || source === "ttm_export";
   const isAliPayImg = source === "alipay_tsplash";
+
+  // KB Pay 用独立卡片布局；其它来源用通用布局
+  if (kbpayCardEl) kbpayCardEl.style.display = isKbpay ? "flex" : "none";
+  if (genericMetaEl) genericMetaEl.style.display = isKbpay ? "none" : "";
+  if (genericQrEl) genericQrEl.style.display = isKbpay ? "none" : "";
+
   if (xbotDetailsEl) xbotDetailsEl.style.display = isXbot ? "block" : "none";
   if (ttmDetailsEl) ttmDetailsEl.style.display = isTtm ? "block" : "none";
+
+  // 序号（通用布局用；KB Pay 的序号在卡片头部单独展示）
+  const seqN = shown && shown.seq ? shown.seq : 0;
+  if (seqRowEl && curSeqEl) {
+    if (seqN && !isKbpay) {
+      curSeqEl.textContent = "#" + seqN;
+      seqRowEl.style.display = "";
+    } else {
+      seqRowEl.style.display = "none";
+    }
+  }
+
+  if (isKbpay) {
+    const isDone = cur.status === "scanned" && cur.pending_count === 0;
+    if (kbSeqEl) kbSeqEl.textContent = seqN ? "#" + seqN : "#-";
+    if (kbSiteEl) kbSiteEl.textContent = meta.site || "KB Pay";
+    if (kbTitleEl) kbTitleEl.innerHTML = isDone ? "Payment done" : '<span class="dot"></span>Waiting for payment';
+    if (kbBannerEl) {
+      kbBannerEl.style.display = isDone ? "block" : "none";
+      if (isDone) kbBannerEl.textContent = "本位置已完成扫码付款";
+    }
+    if (kbCodeEl) kbCodeEl.textContent = meta.settle_code || "-";
+    if (kbPayMEl) kbPayMEl.textContent = meta.pay_method || "-";
+    if (kbEventEl) {
+      kbEventEl.textContent = meta.event || "-";
+      kbEventEl.href = meta.event_url || "#";
+    }
+    if (kbDateEl) kbDateEl.textContent = meta.date || "-";
+    if (kbZoneVEl) kbZoneVEl.textContent = meta.zone || "-";
+    if (kbSeatEl) kbSeatEl.textContent = meta.seat_detail || "-";
+    if (kbPriceEl) kbPriceEl.textContent = meta.price ? String(meta.price) : "-";
+    if (kbQtyEl) kbQtyEl.textContent = meta.quantity ? String(meta.quantity) : "-";
+    if (kbCapEl) kbCapEl.textContent = shown ? fmtDateTime(shown.captured_at) : "-";
+    if (kbStepsBodyEl) kbStepsBodyEl.textContent = meta.steps || "-";
+    if (kbLinkEl) {
+      if (shown && shown.message_link) {
+        kbLinkEl.href = shown.message_link;
+        kbLinkEl.textContent = "打开 Discord 消息";
+      } else {
+        kbLinkEl.href = "#";
+        kbLinkEl.textContent = "-";
+      }
+    }
+    if (kbQrImgEl) {
+      if (shown && shown.qr_url) {
+        if (kbQrImgEl.getAttribute("src") !== shown.qr_url) kbQrImgEl.src = shown.qr_url;
+        kbQrImgEl.style.display = "block";
+      } else {
+        kbQrImgEl.removeAttribute("src");
+        kbQrImgEl.style.display = "none";
+      }
+    }
+    if (kbCopyEl) {
+      kbCopyEl.onclick = () => {
+        const code = meta.settle_code || "";
+        if (!code) return;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code).then(() => showToast("已复制结算码 " + code, "ok")).catch(() => {});
+        } else {
+          showToast("结算码 " + code, "ok");
+        }
+      };
+    }
+    if (kbExpEl && kbCdEl && kbStateEl) {
+      const exp = shown && shown.expires_at ? shown.expires_at : 0;
+      const remaining = exp ? exp - state.server_time : 0;
+      kbExpEl.className = "expiry";
+      if (isDone) {
+        kbCdEl.textContent = "--:--";
+        kbStateEl.textContent = "已完成付款";
+        kbExpEl.classList.add("ok");
+      } else if (!exp) {
+        kbCdEl.textContent = "--:--";
+        kbStateEl.textContent = "-";
+      } else if (remaining <= 0) {
+        kbCdEl.textContent = "00:00";
+        kbStateEl.textContent = "已过期 · 请忽略此码";
+        kbExpEl.classList.add("dead");
+      } else if (remaining <= 60) {
+        kbCdEl.textContent = fmtMMSS(remaining);
+        kbStateEl.textContent = "即将过期";
+        kbExpEl.classList.add("warn");
+      } else {
+        kbCdEl.textContent = fmtMMSS(remaining);
+        kbStateEl.textContent = "有效 · 等待付款";
+        kbExpEl.classList.add("ok");
+      }
+    }
+  }
 
   if (isXbot) {
     if (curDateEl) curDateEl.textContent = meta.date || "-";
