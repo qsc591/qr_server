@@ -15,9 +15,9 @@ sudo systemctl stop wechat-qr-server
 # 2) 保护本地配置（防止被覆盖）
 git update-index --skip-worktree wechat_qr_server/config.json 2>/dev/null || true
 
-# 3) 拉取并更新到 hkt_tsp
+# 3) 拉取并更新到 xbot_kbpay
 git fetch origin
-git checkout hkt_tsp || git checkout -b hkt_tsp origin/hkt_tsp
+git checkout xbot_kbpay || git checkout -b xbot_kbpay origin/xbot_kbpay
 git pull --ff-only
 
 # 4) 启动
