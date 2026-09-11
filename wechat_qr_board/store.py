@@ -155,8 +155,14 @@ class Store:
 
     def _find_next_pending_locked(self, after_key: Optional[str]) -> Optional[str]:
         keys = list(self.seats.keys())
-        # 尽量按 seat_label 排序稳定
-        keys.sort(key=lambda k: self.seats[k].seat_label)
+        # 按抓取序号(seq)升序，与前端列表显示顺序保持一致
+        # 这样「下一个」按钮永远跳到 #1 #2 #3… 的下一个未扫描
+        def _k(k):
+            s = self.seats[k]
+            it = (s.pending[0] if s.pending else (s.scanned[-1] if s.scanned else None))
+            seq = int(getattr(it, "seq", 0) or 0) if it else 0
+            return (seq, s.seat_label)
+        keys.sort(key=_k)
         if not keys:
             return None
         start_idx = 0
