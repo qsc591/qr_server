@@ -841,14 +841,6 @@ a:hover {
     scroll-snap-type: x proximity;
     overscroll-behavior-x: contain;
   }
-  /* 折叠时给个占位提示（点标题展开） */
-  .seat-section.scanned:has(.seat-items:empty) .seat-items::after,
-  .seat-section.expired:has(.seat-items:empty) .seat-items::after {
-    content: "点击标题展开";
-    color: rgba(231,238,252,.35);
-    font-size: 11px;
-    padding: 2px 6px;
-  }
   /* 分组标题：手机上仍显示，压小尺寸；sticky 关掉（横向 items 里 sticky 无意义） */
   .group-head {
     display: flex !important;
@@ -944,4 +936,39 @@ a:hover {
   .card .actions .btn { flex: 1; min-width: 0; padding: 12px 14px; font-size: 15px; }
   /* 给内容底部留出按钮空间,避免遮挡 */
   .card { padding-bottom: 76px; }
+
+  /* 结算码 + 复制按钮并排（放结算码旁边，避免与底部下一个按钮误触） */
+  #kbpayCard .code-box {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "label label"
+      "code copy";
+    column-gap: 12px;
+    row-gap: 6px;
+    align-items: center;
+  }
+  #kbpayCard .code-box .code-label { grid-area: label; }
+  #kbpayCard .code-box .code-big { grid-area: code; }
+  #kbpayCard .code-box .code-actions { grid-area: copy; margin: 0; }
+  #kbpayCard .code-box .code-actions .btn { padding: 10px 12px; font-size: 13px; min-width: 0; }
+
+  /* 已扫描 / 已过期 折叠时并排一行（只显示数字）；展开时占整行 */
+  .seat-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 8px;
+    padding: 6px 6px 8px;
+  }
+  .seat-section { grid-column: 1 / -1; }
+  .seat-section.scanned,
+  .seat-section.expired {
+    grid-column: auto;
+  }
+  .seat-section.scanned:has(.seat-items > *),
+  .seat-section.expired:has(.seat-items > *) {
+    grid-column: 1 / -1;
+  }
+  /* 折叠状态下不显示 “点击标题展开” 提示（保持极简） */
+  .seat-section .seat-items:empty::after { content: none; }
 }
