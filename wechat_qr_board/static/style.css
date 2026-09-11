@@ -655,6 +655,7 @@ a:hover {
   height: auto;
   max-width: 210px;
   display: block;
+  margin: 0 auto;
   image-rendering: pixelated;
 }
 #kbpayCard .qr-under {
