@@ -89,28 +89,36 @@ body {
   display: block;
 }
 
-/* ===== 手机（≤640）：顶栏压缩，把 iframe 高度让出来 ===== */
+/* ===== 手机（≤640）：顶栏极简，只保留分组名，节省一屏 ===== */
 @media (max-width: 640px) {
   html, body { -webkit-text-size-adjust: 100%; }
   .topbar {
-    height: auto;
-    min-height: 48px;
-    padding: 6px 8px;
-    flex-wrap: wrap;
-    gap: 6px;
+    height: 36px;
+    min-height: 36px;
+    padding: 0 10px;
   }
   .topbar .center {
     position: static;
     transform: none;
     text-align: left;
-    flex: 1 1 100%;
+    flex: 1 1 auto;
+    min-width: 0;
     order: -1;
   }
-  .topbar .center .brand { font-size: 13px; }
-  .topbar .center .meta { font-size: 11px; margin-top: 1px; }
-  .topbar .right { gap: 6px; }
-  .topbar .right .btn { padding: 6px 8px; font-size: 12px; border-radius: 8px; }
-  .frame { height: calc(100% - 78px); }
+  /* 只显示分组名，隐藏 brand / "分组：" 前缀 / (ID: xxx) / PGW */
+  .topbar .center .brand { display: none; }
+  .topbar .center .meta-prefix,
+  .topbar .center .meta-id,
+  .topbar .center #pgwMeta { display: none; }
+  .topbar .center .meta { margin: 0; }
+  .topbar .center #groupName {
+    font-size: 15px;
+    font-weight: 900;
+    color: rgba(255, 204, 0, 0.95);
+  }
+  /* 右侧按钮全隐（下载 CSV / 分享链接手机上很少用） */
+  .topbar .right { display: none; }
+  .frame { height: calc(100% - 36px); }
 }
 @media (min-width: 641px) and (max-width: 1024px) {
   .topbar { padding: 0 10px; }

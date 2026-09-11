@@ -422,6 +422,10 @@ a:hover {
     border-right: 0;
     border-bottom: 1px solid var(--border);
     max-width: 100%;
+    max-height: 42vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
   .left-header {
     padding: 8px 12px 6px;
@@ -814,9 +818,50 @@ a:hover {
 
 /* ===== 手机端最终覆盖（放最尾，保证不被后写的基础规则覆盖） ===== */
 @media (max-width: 640px) {
-  .group-head { display: none; }
-  .seat-item .seat-status { display: none; }
-  .seat-item > div:nth-child(4) { display: none; }
+  /* 座位列表：三段（未扫描 / 已扫描 / 已过期）各占一段竖排；每段内胶囊横向滚 */
+  .seat-list {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 4px;
+    padding: 6px 6px 8px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  .seat-section { display: block; margin: 0; }
+  .seat-section .seat-items {
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
+    padding: 4px 4px 4px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    overscroll-behavior-x: contain;
+  }
+  /* 折叠时给个占位提示（点标题展开） */
+  .seat-section.scanned:has(.seat-items:empty) .seat-items::after,
+  .seat-section.expired:has(.seat-items:empty) .seat-items::after {
+    content: "点击标题展开";
+    color: rgba(231,238,252,.35);
+    font-size: 11px;
+    padding: 2px 6px;
+  }
+  /* 分组标题：手机上仍显示，压小尺寸；sticky 关掉（横向 items 里 sticky 无意义） */
+  .group-head {
+    display: flex !important;
+    position: static;
+    padding: 4px 8px;
+    margin: 0;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+  }
+  .group-head .cnt { font-size: 11px; padding: 1px 8px; }
+  .group-head .caret { width: 12px; font-size: 10px; }
+
+  /* 胶囊：横排、固定宽 */
   .seat-item {
     display: grid;
     grid-template-columns: 1fr;
@@ -826,8 +871,12 @@ a:hover {
     flex: 0 0 auto;
     scroll-snap-align: start;
   }
+  .seat-item .seat-status { display: none; }
+  .seat-item > div:nth-child(4) { display: none; }
   .seat-line-1 { font-size: 13px; }
   .seat-line-2 { font-size: 12px; margin-top: 2px; }
+
+  /* KB Pay 卡片 */
   #kbpayCard .code-big { font-size: 34px; letter-spacing: 0.08em; }
   #kbpayCard .qr-box img { max-width: 190px; }
   #kbpayCard .expiry .cd { font-size: 22px; }
@@ -839,3 +888,60 @@ a:hover {
 }
 
 
+
+/* ===== 手机端 KB Pay 卡片：紧凑化 + 倒计时前置 + 底部按钮常驻 ===== */
+@media (max-width: 640px) {
+  /* QR 更小 */
+  #kbpayCard .qr-box { padding: 10px; min-height: 0; }
+  #kbpayCard .qr-box img { max-width: 140px; }
+  #kbpayCard .qr-under { font-size: 11px; margin-top: 4px; }
+
+  /* 结算码：字号 + padding 更紧 */
+  #kbpayCard .code-box { padding: 10px 12px; }
+  #kbpayCard .code-label { font-size: 12px; }
+  #kbpayCard .code-big { font-size: 28px; letter-spacing: 0.08em; }
+  #kbpayCard .code-actions { margin-top: 8px; }
+  #kbpayCard .code-actions .btn { padding: 6px 10px; font-size: 12px; }
+
+  /* KB Pay 胶囊小一点 */
+  #kbpayCard .paymethod { padding: 6px 10px; font-size: 12px; }
+  #kbpayCard .paymethod .kbmark { width: 18px; height: 18px; font-size: 10px; }
+
+  /* pay-side 更紧 + 把过期倒计时提到最上面(qr 下方紧邻) */
+  #kbpayCard .pay-side { gap: 8px; }
+  #kbpayCard .expiry { order: -1; padding: 8px 12px; }
+  #kbpayCard .expiry .cd { font-size: 20px; }
+  #kbpayCard .expiry .state { font-size: 12px; }
+
+  /* metagrid：字号收 + 手机上隐藏抓取时间那行(节省空间) */
+  #kbpayCard .kb-metagrid { gap: 6px 12px; }
+  #kbpayCard .kb-mlabel { font-size: 11px; }
+  #kbpayCard .kb-mval { font-size: 13px; }
+  #kbpayCard .kb-mrow:has(#kbCap) { display: none; }
+
+  /* 扫码步骤紧凑 */
+  #kbpayCard .kb-steps { padding: 8px 10px; }
+  #kbpayCard .kb-steps .h { font-size: 11px; margin-bottom: 4px; }
+  #kbpayCard .kb-steps-body { font-size: 12px; line-height: 1.5; }
+
+  /* 「下一个/Discord」按钮常驻底部,不再需要滚动到底 */
+  .card .actions {
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    display: flex;
+    gap: 8px;
+    padding: 10px;
+    border-radius: 14px;
+    background: rgba(15, 26, 46, 0.96);
+    border: 1px solid var(--border);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+  }
+  .card .actions .btn { flex: 1; min-width: 0; padding: 12px 14px; font-size: 15px; }
+  /* 给内容底部留出按钮空间,避免遮挡 */
+  .card { padding-bottom: 76px; }
+}

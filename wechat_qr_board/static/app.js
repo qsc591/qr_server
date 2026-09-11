@@ -176,18 +176,30 @@ function render(state) {
   const expiredSeats = state.seats.filter((s) => isSeatExpired(s));
   const doneSeats = state.seats.filter((s) => s.status === "scanned");
 
-  seatListEl.appendChild(buildGroupHead("未扫描", activeSeats.length, "", false));
-  activeSeats.forEach((seat) => seatListEl.appendChild(buildSeatItem(seat)));
+  const buildSection = (label, kind, seats, collapsed, onToggle) => {
+    const wrap = document.createElement("div");
+    wrap.className = "seat-section" + (kind ? " " + kind : "");
+    const head = buildGroupHead(label, seats.length, kind, collapsed);
+    if (onToggle) head.onclick = onToggle;
+    wrap.appendChild(head);
+    const items = document.createElement("div");
+    items.className = "seat-items";
+    if (!collapsed || !kind) {
+      seats.forEach((s) => items.appendChild(buildSeatItem(s)));
+    }
+    wrap.appendChild(items);
+    return wrap;
+  };
 
-  const scannedHead = buildGroupHead("已扫描", doneSeats.length, "scanned", scannedCollapsed);
-  scannedHead.onclick = () => { scannedCollapsed = !scannedCollapsed; render(state); };
-  seatListEl.appendChild(scannedHead);
-  if (!scannedCollapsed) doneSeats.forEach((seat) => seatListEl.appendChild(buildSeatItem(seat)));
-
-  const expiredHead = buildGroupHead("已过期", expiredSeats.length, "expired", expiredCollapsed);
-  expiredHead.onclick = () => { expiredCollapsed = !expiredCollapsed; render(state); };
-  seatListEl.appendChild(expiredHead);
-  if (!expiredCollapsed) expiredSeats.forEach((seat) => seatListEl.appendChild(buildSeatItem(seat)));
+  seatListEl.appendChild(buildSection("未扫描", "", activeSeats, false, null));
+  seatListEl.appendChild(buildSection(
+    "已扫描", "scanned", doneSeats, scannedCollapsed,
+    () => { scannedCollapsed = !scannedCollapsed; render(state); }
+  ));
+  seatListEl.appendChild(buildSection(
+    "已过期", "expired", expiredSeats, expiredCollapsed,
+    () => { expiredCollapsed = !expiredCollapsed; render(state); }
+  ));
 
   const cur = state.seats.find((s) => s.seat_key === selectedSeatKey) || null;
   const curSeatEl = document.getElementById("curSeat");
