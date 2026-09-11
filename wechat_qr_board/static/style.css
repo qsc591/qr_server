@@ -397,20 +397,31 @@ a:hover {
 .group-head {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 4px 8px;
-  margin-top: 2px;
-  font-size: 12px;
+  gap: 10px;
+  padding: 10px 4px 10px;
+  margin-top: 4px;
+  font-size: 16px;
   font-weight: 800;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   color: var(--muted);
   position: sticky;
   top: 0;
   background: rgba(15, 26, 46, 0.97);
   z-index: 2;
 }
+.group-head .caret {
+  width: 14px;
+  font-size: 12px;
+}
+.group-head .cnt {
+  font-size: 13px;
+  padding: 2px 10px;
+}
 .group-head.scanned {
   color: rgba(41, 196, 109, 0.9);
+}
+.group-head.expired {
+  color: rgba(255, 77, 79, 0.9);
 }
 .group-head.collapsible {
   cursor: pointer;
@@ -495,6 +506,9 @@ a:hover {
   font-size: 15px;
   font-weight: 800;
   color: rgba(231, 238, 252, 0.9);
+}
+#kbpayCard .kb-title.dead {
+  color: var(--red);
 }
 #kbpayCard .kb-title .dot {
   display: inline-block;

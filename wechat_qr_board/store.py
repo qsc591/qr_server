@@ -89,8 +89,12 @@ class Store:
     def list_seats_for_ui(self) -> Dict:
         with self._lock:
             seats = list(self.seats.values())
-        # 默认：pending 优先，其次按 label 排序
-        seats.sort(key=lambda s: (0 if s.pending else 1, s.seat_label))
+        # 默认：pending 优先；然后按抓取序号（seq）从小到大；最后按 label 兜底
+        def _sort_key(s):
+            it = (s.pending[0] if s.pending else (s.scanned[-1] if s.scanned else None))
+            seq = int(getattr(it, "seq", 0) or 0) if it else 0
+            return (0 if s.pending else 1, seq, s.seat_label)
+        seats.sort(key=_sort_key)
         return {
             "server_time": time.time(),
             "seats": [seat_state_to_dict(s) for s in seats],

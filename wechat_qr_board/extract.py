@@ -1062,8 +1062,13 @@ def extract_kbpay_entries(
 
     date_key = time_info.get("date_key") or ""
     seat_detail = seat_price.get("seat_detail") or ""
+    # 完整座位 = zone + 座位段（例：X 전 floor row 15 seat 7）
+    if zone and seat_detail:
+        seat_detail = f"{zone} {seat_detail}"
+    elif zone and not seat_detail:
+        seat_detail = zone
     # 左侧展示：日期在上、座位在下
-    seat_label = f"{date_key} {seat_detail}".strip() if date_key else (seat_detail or zone or "KB Pay")
+    seat_label = f"{date_key} {seat_detail}".strip() if date_key else (seat_detail or "KB Pay")
     # seat_key 用결제코드做唯一性（不同订单不合并）
     seat_key = f"{settle_code} {seat_label}".strip() if settle_code else choose_seat_key(seat_label)
 

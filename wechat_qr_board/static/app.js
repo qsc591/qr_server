@@ -4,6 +4,7 @@ let lastShownQrUrl = null;
 let toastTimer = null;
 let ttmJumped = {}; // seat_key -> true (unlock Next after jumping to Alipay)
 let scannedCollapsed = true; // 左侧「已扫描」子分组默认折叠
+let expiredCollapsed = true; // 左侧「已过期」子分组默认折叠
 
 async function logTtmJump(seatKey) {
   const k = String(seatKey || "").trim();
@@ -86,6 +87,14 @@ function render(state) {
       (seat.current && seat.current.seq) ||
       (seat.last_scanned && seat.last_scanned.seq) ||
       0;
+    const srcHere =
+      (seat.current && seat.current.meta && seat.current.meta.source) ||
+      (seat.last_scanned && seat.last_scanned.meta && seat.last_scanned.meta.source) ||
+      "";
+    // KB Pay：座位加粗在上、日期小字在下（座位是每张票的关键信息）
+    const kbSwap = srcHere === "kbpay" && parts.bottom;
+    const topText = kbSwap ? parts.bottom : (parts.top || "-");
+    const bottomText = kbSwap ? parts.top : parts.bottom;
 
     const topline = document.createElement("div");
     topline.className = "seat-topline";
@@ -97,13 +106,13 @@ function render(state) {
     }
     const line1 = document.createElement("div");
     line1.className = "seat-line seat-line-1";
-    line1.textContent = parts.top || "-";
+    line1.textContent = topText;
     topline.appendChild(line1);
     name.appendChild(topline);
-    if (parts.bottom) {
+    if (bottomText) {
       const line2 = document.createElement("div");
       line2.className = "seat-line seat-line-2";
-      line2.textContent = parts.bottom;
+      line2.textContent = bottomText;
       name.appendChild(line2);
     }
 
@@ -142,29 +151,43 @@ function render(state) {
     return item;
   };
 
-  const buildGroupHead = (label, count, isScanned, collapsed) => {
+  const buildGroupHead = (label, count, kind, collapsed) => {
+    // kind: "" | "expired" | "scanned"
+    const cls = ["group-head"];
+    if (kind === "scanned") cls.push("scanned");
+    else if (kind === "expired") cls.push("expired");
+    if (kind) cls.push("collapsible");
     const head = document.createElement("div");
-    head.className = "group-head" + (isScanned ? " scanned collapsible" : "");
+    head.className = cls.join(" ");
     let inner = "";
-    if (isScanned) inner += `<span class="caret">${collapsed ? "▸" : "▾"}</span>`;
+    if (kind) inner += `<span class="caret">${collapsed ? "▸" : "▾"}</span>`;
     inner += `<span>${label}</span><span class="cnt">${count}</span><span class="line"></span>`;
     head.innerHTML = inner;
     return head;
   };
 
-  const pendingSeats = state.seats.filter((s) => s.status !== "scanned");
+  const isSeatExpired = (s) =>
+    s.status !== "scanned" &&
+    s.current &&
+    s.current.expires_at &&
+    s.current.expires_at - state.server_time <= 0;
+
+  const activeSeats = state.seats.filter((s) => s.status !== "scanned" && !isSeatExpired(s));
+  const expiredSeats = state.seats.filter((s) => isSeatExpired(s));
   const doneSeats = state.seats.filter((s) => s.status === "scanned");
 
-  seatListEl.appendChild(buildGroupHead("未扫描", pendingSeats.length, false, false));
-  pendingSeats.forEach((seat) => seatListEl.appendChild(buildSeatItem(seat)));
+  seatListEl.appendChild(buildGroupHead("未扫描", activeSeats.length, "", false));
+  activeSeats.forEach((seat) => seatListEl.appendChild(buildSeatItem(seat)));
 
-  const scannedHead = buildGroupHead("已扫描", doneSeats.length, true, scannedCollapsed);
-  scannedHead.onclick = () => {
-    scannedCollapsed = !scannedCollapsed;
-    render(state);
-  };
+  const scannedHead = buildGroupHead("已扫描", doneSeats.length, "scanned", scannedCollapsed);
+  scannedHead.onclick = () => { scannedCollapsed = !scannedCollapsed; render(state); };
   seatListEl.appendChild(scannedHead);
   if (!scannedCollapsed) doneSeats.forEach((seat) => seatListEl.appendChild(buildSeatItem(seat)));
+
+  const expiredHead = buildGroupHead("已过期", expiredSeats.length, "expired", expiredCollapsed);
+  expiredHead.onclick = () => { expiredCollapsed = !expiredCollapsed; render(state); };
+  seatListEl.appendChild(expiredHead);
+  if (!expiredCollapsed) expiredSeats.forEach((seat) => seatListEl.appendChild(buildSeatItem(seat)));
 
   const cur = state.seats.find((s) => s.seat_key === selectedSeatKey) || null;
   const curSeatEl = document.getElementById("curSeat");
@@ -203,7 +226,6 @@ function render(state) {
   const kbStateEl = document.getElementById("kbState");
   const kbEventEl = document.getElementById("kbEvent");
   const kbDateEl = document.getElementById("kbDate");
-  const kbZoneVEl = document.getElementById("kbZoneV");
   const kbSeatEl = document.getElementById("kbSeat");
   const kbPriceEl = document.getElementById("kbPrice");
   const kbQtyEl = document.getElementById("kbQty");
@@ -278,9 +300,22 @@ function render(state) {
 
   if (isKbpay) {
     const isDone = cur.status === "scanned" && cur.pending_count === 0;
+    const _expTs = shown && shown.expires_at ? shown.expires_at : 0;
+    const _rem = _expTs ? _expTs - state.server_time : 0;
+    const isKbExpired = !isDone && _expTs && _rem <= 0;
     if (kbSeqEl) kbSeqEl.textContent = seqN ? "#" + seqN : "#-";
     if (kbSiteEl) kbSiteEl.textContent = meta.site || "KB Pay";
-    if (kbTitleEl) kbTitleEl.innerHTML = isDone ? "Payment done" : '<span class="dot"></span>Waiting for payment';
+    if (kbTitleEl) {
+      kbTitleEl.classList.remove("dead");
+      if (isDone) {
+        kbTitleEl.innerHTML = "Payment done";
+      } else if (isKbExpired) {
+        kbTitleEl.innerHTML = "已过期 · 请忽略此码";
+        kbTitleEl.classList.add("dead");
+      } else {
+        kbTitleEl.innerHTML = '<span class="dot"></span>Waiting for payment';
+      }
+    }
     if (kbBannerEl) {
       kbBannerEl.style.display = isDone ? "block" : "none";
       if (isDone) kbBannerEl.textContent = "本位置已完成扫码付款";
@@ -292,7 +327,6 @@ function render(state) {
       kbEventEl.href = meta.event_url || "#";
     }
     if (kbDateEl) kbDateEl.textContent = meta.date || "-";
-    if (kbZoneVEl) kbZoneVEl.textContent = meta.zone || "-";
     if (kbSeatEl) kbSeatEl.textContent = meta.seat_detail || "-";
     if (kbPriceEl) kbPriceEl.textContent = meta.price ? String(meta.price) : "-";
     if (kbQtyEl) kbQtyEl.textContent = meta.quantity ? String(meta.quantity) : "-";
