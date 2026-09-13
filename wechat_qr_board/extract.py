@@ -943,13 +943,17 @@ def _kb_field_get(fields: Dict[str, str], *contains: str) -> str:
 
 
 def _is_kbpay_embed(embed_dict: Dict) -> bool:
-    """判定：任一「支付方式 / Pay Type」字段值里含 'KB Pay'。"""
+    """
+    判定 KB Pay 消息，兼容三种字段命名：
+    - Xbot: 「支付方式」/ 「Pay Type」，value 含 'KB Pay' / 'KBPay'
+    - T-Splash: 「Paymethod」，value 'KBPay'
+    """
     for f in (embed_dict.get("fields") or []):
         if not isinstance(f, dict):
             continue
         name = _normalize_field(str(f.get("name") or ""))
-        if ("支付方式" in name) or ("pay type" in name):
-            v = str(f.get("value") or "").lower()
+        if ("支付方式" in name) or ("pay type" in name) or (name == "paymethod"):
+            v = str(f.get("value") or "").lower().replace("||", "").strip()
             if ("kb pay" in v) or ("kbpay" in v.replace(" ", "")):
                 return True
     return False
@@ -997,6 +1001,35 @@ def _parse_kbpay_seat(seat_no_text: str) -> Dict[str, str]:
     return out
 
 
+def _parse_tsplash_kbpay_seat_info(text: str) -> Dict[str, str]:
+    """
+    T-Splash Seat Info：
+    "20261106\\n2-층-A-구역-6-열-36-번--R석-203_346"
+    返回 date_key、show_time、zone、seat_detail
+    """
+    out = {"date_key": "", "show_time": "", "zone": "", "seat_detail": ""}
+    if not text:
+        return out
+    lines = [ln.strip() for ln in text.replace("\r", "").split("\n") if ln.strip()]
+    if not lines:
+        return out
+    m = re.match(r"^(\d{4})(\d{2})(\d{2})", lines[0])
+    if m:
+        out["date_key"] = lines[0][:8]
+        out["show_time"] = f"{m.group(1)}-{m.group(2)}-{m.group(3)}"
+    if len(lines) >= 2:
+        seat = lines[1]
+        mz = re.search(r"([A-Za-z0-9]+)-?구역", seat)
+        if mz:
+            out["zone"] = mz.group(1)
+        s = re.sub(r"-+", " ", seat).strip()
+        # 去掉末尾的编号/席位价 (如 "203_346")
+        s = re.sub(r"\s+\d+_\d+\s*$", "", s)
+        s = re.sub(r"\s+", " ", s).strip()
+        out["seat_detail"] = s
+    return out
+
+
 def _parse_kbpay_event(value: str) -> Tuple[str, str]:
     """Event 字段：优先 markdown 链接 [名称](url)。返回 (event_name, event_url)。"""
     v = value or ""
@@ -1040,14 +1073,28 @@ def extract_kbpay_entries(
 
     fields = _embed_field_map(d)
 
+    # 数据源判定：T-Splash 用 kakaopayqr S3 图；Xbot 用 api.qrserver.com
+    is_tsplash = "kakaopayqr.s3.amazonaws.com" in qr_url.lower()
+
     settle_code = _kb_field_get(fields, "결제코드", "结算码", "결제 코드").replace("||", "").strip()
     if not settle_code:
         m = re.search(r"[?&]data=([^&#]+)", qr_url)
         if m:
             settle_code = m.group(1).strip()
+    # T-Splash 没独立结算码字段，回退 OrderId 当参考号（去 spoiler ||…||）
+    order_id = (fields.get("OrderId") or fields.get("Order Id") or "").replace("||", "").strip()
+    if not settle_code and order_id:
+        settle_code = order_id
 
-    # 优先「支付方式」字段（앱카드…），其次才回退 Pay Type
-    pay_method = (_kb_field_get(fields, "支付方式") or _kb_field_get(fields, "pay type")).replace("||", "").strip()
+    # 优先「支付方式」字段（앱카드…），其次 Pay Type，再回退 Paymethod（T-Splash）
+    pay_method = (
+        _kb_field_get(fields, "支付方式")
+        or _kb_field_get(fields, "pay type")
+        or _kb_field_get(fields, "paymethod")
+    ).replace("||", "").strip()
+    if is_tsplash and pay_method.lower() in ("kbpay", "kb pay"):
+        pay_method = "KB Pay (KakaoPay QR)"
+
     site = (fields.get("Site") or "").strip()
     zone = (fields.get("Zone") or "").replace("||", "").strip()
     qty = (fields.get("Quantity") or "").strip()
@@ -1056,14 +1103,27 @@ def extract_kbpay_entries(
     seat_no = fields.get("Seat No", "")
     expire_txt = fields.get("Order Expire", "")
 
-    event_name, event_url = _parse_kbpay_event(fields.get("Event", ""))
+    event_name, event_url = _parse_kbpay_event(fields.get("Event", "") or site)
     time_info = _parse_kbpay_show_time(round_txt)
-    seat_price = _parse_kbpay_seat(seat_no)
+    seat_price = _parse_kbpay_seat(seat_no) if seat_no else {"seat_detail": "", "price": ""}
+
+    # T-Splash 分支：从 Seat Info 取日期/zone/座位；给个默认扫码步骤
+    if is_tsplash and not seat_price.get("seat_detail"):
+        ts_seat = _parse_tsplash_kbpay_seat_info(fields.get("Seat Info", ""))
+        seat_price["seat_detail"] = ts_seat.get("seat_detail", "")
+        if not zone:
+            zone = ts_seat.get("zone", "")
+        if not time_info.get("date_key"):
+            time_info["date_key"] = ts_seat.get("date_key", "")
+            time_info["show_time"] = ts_seat.get("show_time", "")
+    if is_tsplash and not steps:
+        steps = "1️⃣ 打开 KB Pay App（KB국민카드）\n2️⃣ 选「결제코드 / QR결제」\n3️⃣ 扫上方二维码"
 
     date_key = time_info.get("date_key") or ""
     seat_detail = seat_price.get("seat_detail") or ""
     # 完整座位 = zone + 座位段（例：X 전 floor row 15 seat 7）
-    if zone and seat_detail:
+    # T-Splash 的 seat_detail 已含 zone（"A 구역"），不再前置避免重复
+    if zone and seat_detail and not is_tsplash:
         seat_detail = f"{zone} {seat_detail}"
     elif zone and not seat_detail:
         seat_detail = zone
@@ -1082,6 +1142,7 @@ def extract_kbpay_entries(
     meta = {
         "source": "kbpay",
         "settle_code": settle_code,
+        "order_id": order_id,
         "pay_method": pay_method,
         "site": site,
         "zone": zone,

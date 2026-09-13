@@ -282,6 +282,24 @@ async def main_async() -> None:
                 )
                 return
 
+        # ===== KB Pay (KB국민카드 · Melon KR)：按「支付方式/Pay Type/Paymethod」字段含 KB Pay 识别 =====
+        # 放 Kakao 分支之前：T-Splash 的 KBPay 二维码也来自 kakaopayqr S3，避免被 Kakao 分组抢走
+        kbpay_result = extract_kbpay_entries(
+            message,
+            seat_field_name_patterns=cfg.seat_field_name_patterns,
+            account_field_name_patterns=cfg.account_field_name_patterns,
+            countdown_seconds=cfg.countdown_seconds,
+        )
+        if kbpay_result:
+            seat_key, seat_label, account_info, items = kbpay_result
+            groups.distribute_kbpay_items(
+                seat_key=seat_key,
+                seat_label=seat_label,
+                account_info=account_info,
+                items=items,
+            )
+            return
+
         if getattr(cfg, "kakao_group_enabled", True):
             kakao_result = extract_kakao_pay_entries(
                 message,
@@ -298,23 +316,6 @@ async def main_async() -> None:
                     items=items,
                 )
                 return
-
-        # ===== KB Pay (KB국민카드 · Melon KR)：按「支付方式」字段含 KB Pay 识别 =====
-        kbpay_result = extract_kbpay_entries(
-            message,
-            seat_field_name_patterns=cfg.seat_field_name_patterns,
-            account_field_name_patterns=cfg.account_field_name_patterns,
-            countdown_seconds=cfg.countdown_seconds,
-        )
-        if kbpay_result:
-            seat_key, seat_label, account_info, items = kbpay_result
-            groups.distribute_kbpay_items(
-                seat_key=seat_key,
-                seat_label=seat_label,
-                account_info=account_info,
-                items=items,
-            )
-            return
 
         result = extract_wechat_qr_entries(
             message,
