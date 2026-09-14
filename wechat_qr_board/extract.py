@@ -913,7 +913,9 @@ def extract_kakao_pay_entries(
         return None
 
     now = time.time()
-    items = [(u, link, now, now + float(countdown_seconds), {"source": "kakao_tsplash"}) for u in qr_urls]
+    # T-Splash Kakao Pay：真实二维码有效期约 5 分钟（服务端没给过期字段）
+    kakao_ttl = 5 * 60.0
+    items = [(u, link, now, now + kakao_ttl, {"source": "kakao_tsplash"}) for u in qr_urls]
     seat_key = choose_seat_key(seat_label)
     return seat_key, seat_label, account_info, items
 
@@ -1137,7 +1139,9 @@ def extract_kbpay_entries(
     )
     link = make_message_link(message)
     now = time.time()
-    expires_at = _parse_discord_timestamp(expire_txt) or (now + float(countdown_seconds))
+    # T-Splash 的 KBPay 服务端没给 Order Expire 字段，按 KakaoPay 实际有效期 5 分钟
+    _default_ttl = (5 * 60.0) if is_tsplash else float(countdown_seconds)
+    expires_at = _parse_discord_timestamp(expire_txt) or (now + _default_ttl)
 
     meta = {
         "source": "kbpay",
