@@ -1123,7 +1123,7 @@ def extract_kbpay_entries(
         or _kb_field_get(fields, "paymethod")
     ).replace("||", "").strip()
     if is_tsplash and pay_method.lower() in ("kbpay", "kb pay"):
-        pay_method = "KB Pay (KakaoPay QR)"
+        pay_method = "KB Pay"
 
     site = (fields.get("Site") or "").strip()
     zone = (fields.get("Zone") or "").replace("||", "").strip()
