@@ -912,10 +912,23 @@ def extract_kakao_pay_entries(
     if not qr_urls:
         return None
 
+    # 从 embed fields 读 Site，按站点决定 TTL（Melon 5 分 / ITP 7 分 / 其他默认 5 分）
+    site = ""
+    for _em in getattr(message, "embeds", None) or []:
+        try:
+            _d = _em.to_dict()
+        except Exception:
+            continue
+        for _f in (_d.get("fields") or []):
+            if isinstance(_f, dict) and _normalize_field(str(_f.get("name") or "")) == "site":
+                site = str(_f.get("value") or "").strip()
+                break
+        if site:
+            break
+
     now = time.time()
-    # T-Splash Kakao Pay：真实二维码有效期约 5 分钟（服务端没给过期字段）
-    kakao_ttl = 5 * 60.0
-    items = [(u, link, now, now + kakao_ttl, {"source": "kakao_tsplash"}) for u in qr_urls]
+    kakao_ttl = _ttl_by_site(site, 5 * 60.0)
+    items = [(u, link, now, now + kakao_ttl, {"source": "kakao_tsplash", "site": site}) for u in qr_urls]
     seat_key = choose_seat_key(seat_label)
     return seat_key, seat_label, account_info, items
 
@@ -932,6 +945,21 @@ def _embed_field_map(embed_dict: Dict) -> Dict[str, str]:
         if name and val and name not in out:
             out[name] = val
     return out
+
+
+def _ttl_by_site(site_or_url: str, default_ttl: float) -> float:
+    """
+    根据站点判断二维码/订单有效期（服务端没给过期字段时的兜底）：
+    - Melon KR (ticket.melon.com / melon.co.kr): 5 分钟
+    - Interpark (interpark.com): 7 分钟
+    - 其他: default_ttl
+    """
+    u = (site_or_url or "").lower()
+    if ("melon.com" in u) or ("melon.co.kr" in u):
+        return 5 * 60.0
+    if "interpark.com" in u:
+        return 7 * 60.0
+    return float(default_ttl)
 
 
 def _kb_field_get(fields: Dict[str, str], *contains: str) -> str:
@@ -1139,9 +1167,10 @@ def extract_kbpay_entries(
     )
     link = make_message_link(message)
     now = time.time()
-    # T-Splash 的 KBPay 服务端没给 Order Expire 字段，按 KakaoPay 实际有效期 5 分钟
-    _default_ttl = (5 * 60.0) if is_tsplash else float(countdown_seconds)
-    expires_at = _parse_discord_timestamp(expire_txt) or (now + _default_ttl)
+    # 优先用 Order Expire 里的真实 <t:...> 时间戳；否则按站点定 TTL：
+    # Melon KR 5 分 / Interpark 7 分 / 其他 T-Splash 默认 5 分 / 其他 Xbot 走 countdown_seconds
+    _fallback_ttl = _ttl_by_site(site, (5 * 60.0) if is_tsplash else float(countdown_seconds))
+    expires_at = _parse_discord_timestamp(expire_txt) or (now + _fallback_ttl)
 
     meta = {
         "source": "kbpay",
